@@ -3,7 +3,7 @@
 This application is written in Matlab language and it is based on HFR_Progs_2_1_2 and M_Map toolboxes.
 This application is designed for High Frequency Radar (HFR) data management according to CNR-ISMAR processing workflow.
 
-HFR_Combiner_TirLig_v30.m is the main code file.
+HFR_Combiner_TirLig_v30.m is the main code file. It takes operating parameters from the external file Src/parameters_TirLig_Meas.txt
 
 This application automatically reads Radial data from HF radar
 installation in Tyrrhenian and Ligurian Sea (MONT, TINO), generates totals
