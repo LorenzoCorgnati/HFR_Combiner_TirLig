@@ -1,0 +1,60 @@
+radar disk ftp host
+150.145.136.21
+radar disk ftp username
+SitoREMOTO
+radar disk ftp password
+codarREMOTO
+work_folder
+/var/run/user/1000/gvfs/ftp:host=150.145.136.21,user=SitoREMOTO/dati-radar/TirLig/RadialRealTime/IdealPattern/
+source_folder
+/media/lorenz/data/CNR/RADAR/Script/hfrprogs/Src/
+incremental_folder
+/media/lorenz/data/CNR/RADAR/Script/hfrprogs/Src/Incremental/
+radial processing folder
+/media/lorenz/data/CNR/RADAR/Script/hfrprogs/RadialProcessing/
+site1_folder
+/var/run/user/1000/gvfs/ftp:host=150.145.136.21,user=SitoREMOTO/dati-radar/TirLig/VIAR/Radials/IdealPattern/
+site2_folder
+/var/run/user/1000/gvfs/ftp:host=150.145.136.21,user=SitoREMOTO/dati-radar/TirLig/TINO/Radials/IdealPattern/
+site3_folder
+/var/run/user/1000/gvfs/ftp:host=150.145.136.21,user=SitoREMOTO/dati-radar/TirLig/MONT/Radials/IdealPattern/
+site4_folder
+/var/run/user/1000/gvfs/ftp:host=150.145.136.21,user=SitoREMOTO/dati-radar/TirLig/ZZZZ/Radials/IdealPattern/
+site5_folder
+/var/run/user/1000/gvfs/ftp:host=150.145.136.21,user=SitoREMOTO/dati-radar/TirLig/XXXX/Radials/IdealPattern/
+site6_folder
+/var/run/user/1000/gvfs/ftp:host=150.145.136.21,user=SitoREMOTO/dati-radar/TirLig/YYYY/Radials/IdealPattern/
+total_maps_folder
+/var/run/user/1000/gvfs/ftp:host=150.145.136.21,user=SitoREMOTO/dati-radar/TirLig/Totals/Total_maps/
+total_maps_server_folder
+/var/run/user/1000/gvfs/ftp:host=150.145.136.24,user=carlo/RadarHF/Total_maps/
+tuv_local_folder
+/media/lorenz/data/CNR/RADAR/Script/hfrprogs/Totals/TUVs/
+tuv_serv_folder
+/var/run/user/1000/gvfs/ftp:host=150.145.136.21,user=SitoREMOTO/dati-radar/TirLig/Totals/TUVs/
+netcdf_thredds_folder
+/var/run/user/1000/gvfs/ftp:host=150.146.139.83,user=ritmare_lcognati/RADAR/
+maps_lon_lim
+9.2 10.1
+maps_lat_lim
+43.68 44.23
+totals_lon_grid
+9.2 10.1
+totals_lat_grid
+43.68 44.23
+totals_lon_points
+48
+totals_lat_points
+41
+velocity_threshold
+120
+spatial_threshold
+3
+GDOP_threshold
+2.83
+totals_evaluation_start_time (type 0 to avoid start time)
+2016_08_07_1600
+totals_evaluation_stop_time (type 0 to avoid stop time)
+0
+default_number_of_range_cells (crucial for THREDDS aggregated visualization)
+45

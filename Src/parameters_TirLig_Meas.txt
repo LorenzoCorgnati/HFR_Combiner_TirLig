@@ -1,0 +1,74 @@
+radar disk ftp host
+150.145.136.21
+radar disk ftp username
+SitoREMOTO
+radar disk ftp password
+codarREMOTO
+work_folder
+/var/run/user/1000/gvfs/ftp:host=150.145.136.21,user=SitoREMOTO/dati-radar/TirLig/RadialRealTime/MeasPattern/
+source_folder
+/media/lorenz/data/CNR/RADAR/Script/hfrprogs/Src/
+incremental_folder
+/media/lorenz/data/CNR/RADAR/Script/hfrprogs/Src/Incremental/
+radial processing folder
+/media/lorenz/data/CNR/RADAR/Script/hfrprogs/RadialProcessing/
+site1_folder
+/var/run/user/1000/gvfs/ftp:host=150.145.136.21,user=SitoREMOTO/dati-radar/TirLig/VIAR/Radials/MeasPattern/
+site2_folder
+/var/run/user/1000/gvfs/ftp:host=150.145.136.21,user=SitoREMOTO/dati-radar/TirLig/TINO/Radials/MeasPattern/
+site3_folder
+/var/run/user/1000/gvfs/ftp:host=150.145.136.21,user=SitoREMOTO/dati-radar/TirLig/MONT/Radials/MeasPattern/
+site4_folder
+/var/run/user/1000/gvfs/ftp:host=150.145.136.21,user=SitoREMOTO/dati-radar/TirLig/ZZZZ/Radials/MeasPattern/
+site5_folder
+/var/run/user/1000/gvfs/ftp:host=150.145.136.21,user=SitoREMOTO/dati-radar/TirLig/XXXX/Radials/MeasPattern/
+site6_folder
+/var/run/user/1000/gvfs/ftp:host=150.145.136.21,user=SitoREMOTO/dati-radar/TirLig/YYYY/Radials/MeasPattern/
+total_maps_folder
+/var/run/user/1000/gvfs/ftp:host=150.145.136.21,user=SitoREMOTO/dati-radar/TirLig/Totals/Total_maps/
+total_maps_server_folder
+/var/run/user/1000/gvfs/ftp:host=150.145.136.24,user=carlo/RadarHF/Total_maps/
+tuv_local_folder
+/home/radarcombine/AutoPuglia/Totals/TUVs/
+tuv_serv_folder
+/var/run/user/1000/gvfs/ftp:host=150.145.136.21,user=SitoREMOTO/dati-radar/TirLig/Totals/TUVs/
+netcdf_thredds_folder
+/var/run/user/1000/gvfs/ftp:host=150.146.139.83,user=ritmare_lcognati/RADAR/
+maps_lon_lim
+9.2 10.1
+maps_lat_lim
+43.68 44.23
+totals_lon_grid
+9.2 10.1
+totals_lat_grid
+43.68 44.23
+totals_lon_points
+48
+totals_lat_points
+41
+radial_QC_median_filter_threshold (RCLim AngLim CurLim)
+10.0 30.0 30.0
+radial_QC_variance_threshold
+2
+radial_QC_velocity_threshold
+120
+radial_QC_average_radial_bearing_threshold
+30
+total_QC_velocity_threshold
+120
+total_QC_GDOP_threshold
+2
+total_QC_variance_threshold
+2
+total_QC_data_density_threshold
+3
+total_QC_balance_contributing_radials_threshold
+65
+spatial_threshold
+3
+totals_evaluation_start_time (type 0 to avoid start time)
+2016_10_17_0000
+totals_evaluation_stop_time (type 0 to avoid stop time)
+0
+default_number_of_range_cells (crucial for THREDDS aggregated visualization)
+45
