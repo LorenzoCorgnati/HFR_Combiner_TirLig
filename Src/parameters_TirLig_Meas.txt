@@ -5,35 +5,35 @@ SitoREMOTO
 radar disk ftp password
 codarREMOTO
 work_folder
-/var/run/user/1000/gvfs/ftp:host=150.145.136.21,user=SitoREMOTO/dati-radar/TirLig/RadialRealTime/MeasPattern/
+/mnt/RadarDisk_ftp/dati-radar/TirLig/RadialRealTime/MeasPattern/
 source_folder
-/media/lorenz/data/CNR/RADAR/Script/hfrprogs/Src/
+/home/radarcombine/HFR_Combiner_TirLig/Src/
 incremental_folder
-/media/lorenz/data/CNR/RADAR/Script/hfrprogs/Src/Incremental/
+/home/radarcombine/HFR_Combiner_TirLig/Src/Incremental/
 radial processing folder
-/media/lorenz/data/CNR/RADAR/Script/hfrprogs/RadialProcessing/
+/home/radarcombine/HFR_Combiner_TirLig/RadialProcessing/
 site1_folder
-/var/run/user/1000/gvfs/ftp:host=150.145.136.21,user=SitoREMOTO/dati-radar/TirLig/VIAR/Radials/MeasPattern/
+/mnt/RadarDisk_ftp/dati-radar/TirLig/VIAR/Radials/MeasPattern/
 site2_folder
-/var/run/user/1000/gvfs/ftp:host=150.145.136.21,user=SitoREMOTO/dati-radar/TirLig/TINO/Radials/MeasPattern/
+/mnt/RadarDisk_ftp/dati-radar/TirLig/TINO/Radials/MeasPattern/
 site3_folder
-/var/run/user/1000/gvfs/ftp:host=150.145.136.21,user=SitoREMOTO/dati-radar/TirLig/MONT/Radials/MeasPattern/
+/mnt/RadarDisk_ftp/dati-radar/TirLig/MONT/Radials/MeasPattern/
 site4_folder
-/var/run/user/1000/gvfs/ftp:host=150.145.136.21,user=SitoREMOTO/dati-radar/TirLig/ZZZZ/Radials/MeasPattern/
+/mnt/RadarDisk_ftp/dati-radar/TirLig/PORT/Radials/MeasPattern/
 site5_folder
-/var/run/user/1000/gvfs/ftp:host=150.145.136.21,user=SitoREMOTO/dati-radar/TirLig/XXXX/Radials/MeasPattern/
+/mnt/RadarDisk_ftp/dati-radar/TirLig/XXXX/Radials/MeasPattern/
 site6_folder
-/var/run/user/1000/gvfs/ftp:host=150.145.136.21,user=SitoREMOTO/dati-radar/TirLig/YYYY/Radials/MeasPattern/
+/mnt/RadarDisk_ftp/dati-radar/TirLig/YYYY/Radials/MeasPattern/
 total_maps_folder
-/var/run/user/1000/gvfs/ftp:host=150.145.136.21,user=SitoREMOTO/dati-radar/TirLig/Totals/Total_maps/
+/mnt/RadarDisk_ftp/dati-radar/TirLig/Totals/Total_maps/
 total_maps_server_folder
-/var/run/user/1000/gvfs/ftp:host=150.145.136.24,user=carlo/RadarHF/Total_maps/
+/mnt/WebServer_ftp/RadarHF/Total_maps/
 tuv_local_folder
-/home/radarcombine/AutoPuglia/Totals/TUVs/
+/home/radarcombine/HFR_Combiner_TirLig/Totals/TUVs/
 tuv_serv_folder
-/var/run/user/1000/gvfs/ftp:host=150.145.136.21,user=SitoREMOTO/dati-radar/TirLig/Totals/TUVs/
+/mnt/RadarDisk_ftp/dati-radar/TirLig/Totals/TUVs/
 netcdf_thredds_folder
-/var/run/user/1000/gvfs/ftp:host=150.146.139.83,user=ritmare_lcognati/RADAR/
+/mnt/ARTOV_TDS_ftp/RADAR/
 maps_lon_lim
 9.2 10.1
 maps_lat_lim
@@ -46,28 +46,34 @@ totals_lon_points
 48
 totals_lat_points
 41
-radial_QC_median_filter_threshold (RCLim AngLim CurLim)
-10.0 30.0 30.0
-radial_QC_variance_threshold
-2
-radial_QC_velocity_threshold
-120
-radial_QC_average_radial_bearing_threshold
-30
-total_QC_velocity_threshold
-120
+radial_QC_median_filter_threshold (RCLim [km] AngLim [deg] CurLim [m/s])
+5.0 30.0 1.0
+radial_QC_variance_threshold [m2/s2]
+1
+radial_QC_temporal_derivative _threshold [m/s]
+1
+radial_QC_velocity_threshold [m/s]
+1.2
+MONT radial_QC_average_radial_bearing_range [deg]
+190 250
+TINO radial_QC_average_radial_bearing_range [deg]
+150 360
+radial_QC_radial_count _threshold
+200
+total_QC_velocity_threshold [m/s]
+1.2
 total_QC_GDOP_threshold
 2
-total_QC_variance_threshold
-2
-total_QC_data_density_threshold
+total_QC_variance_threshold [m2/s2]
+1
+total_QC_temporal_derivative _threshold [m/s]
+1
+total_QC_data_density_threshold (minimum number of contributing radials for combination)
 3
-total_QC_balance_contributing_radials_threshold
-65
-spatial_threshold
+spatial_threshold [km]
 3
 totals_evaluation_start_time (type 0 to avoid start time)
-2016_10_17_0000
+0
 totals_evaluation_stop_time (type 0 to avoid stop time)
 0
 default_number_of_range_cells (crucial for THREDDS aggregated visualization)

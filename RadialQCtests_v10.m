@@ -18,6 +18,7 @@
 %         head: radial velocity heading variable from radial data
 %         radVel: radial velocities from radial data
 %         Radial_QC_params: structure containing parameters for radial QC tests
+%         siteCode: code of the site that produced the radial data
 
 % OUTPUT:
 %         overall: overall quality flag (good data value is assigned
@@ -26,9 +27,9 @@
 %         velThr: Velocity threshold quality flags
 %         overWater: Vector Over Water quality flags
 %         medFilt: Median Filter quality flags
-%         avgRadBear: Average Radial Bearing quality flags
-%         radVel: radial velocities after the applicatiojn of the median
-%         filter
+%         avgRadBear: Average Radial Bearing quality flag
+%         radVelMedianFiltered: radial velocities after the application of the median filter
+%         radCount: Radial Count quality flag
 
 
 % Author: Lorenzo Corgnati
@@ -37,7 +38,7 @@
 % E-mail: lorenzo.corgnati@sp.ismar.cnr.it
 %%
 
-function [overall, overWater, varThr, velThr, medFilt, avgRadBear, radVelMedianFiltered] = RadialQCtests_v10(bear, lond, latd, owtr, etmp, head, radVel, Radial_QC_params)
+function [overall, overWater, varThr, tempDer, velThr, medFilt, avgRadBear, radVelMedianFiltered, radCount] = RadialQCtests_v10(bear, lond, latd, owtr, etmp, head, radVel, Radial_QC_params, siteCode)
 
 display(['[' datestr(now) '] - - ' 'RadialQCtests_v10.m started.']);
 
@@ -49,9 +50,11 @@ overall = netcdf.getConstant('NC_FILL_SHORT').*int16(ones(size(owtr,1), size(owt
 overWater = owtr;
 overWater(isnan(overWater)) = netcdf.getConstant('NC_FILL_SHORT');
 varThr = netcdf.getConstant('NC_FILL_SHORT').*int16(ones(size(owtr,1), size(owtr,2)));
+tempDer = netcdf.getConstant('NC_FILL_SHORT').*int16(ones(size(owtr,1), size(owtr,2)));
 velThr = netcdf.getConstant('NC_FILL_SHORT').*int16(ones(size(owtr,1), size(owtr,2)));
 medFilt = netcdf.getConstant('NC_FILL_SHORT').*int16(ones(size(owtr,1), size(owtr,2)));
 avgRadBear = netcdf.getConstant('NC_FILL_SHORT');
+radCount = netcdf.getConstant('NC_FILL_SHORT');
 
 %%
 
@@ -63,12 +66,19 @@ varVec = etmp.^2;
 maxspd_R = Radial_QC_params.VelThr;
 
 % Average Radial Bearing QC test
+for aRB_idx=1:length(Radial_QC_params.AvgRadBear.site)
+    if(strcmp(Radial_QC_params.AvgRadBear.site(aRB_idx).code, siteCode))
+        aRB_range = Radial_QC_params.AvgRadBear.site(aRB_idx).range;
+    end
+end
 avgBear_HEAD = mean(head(~isnan(head)));
 avgBear = mean(head(~isnan(bear)));
 
 % Median Filter QC test
 radVelMedianFiltered = radVel;
 
+% Radial Count QC test
+radVectors = sum(sum(~isnan(radVel)));
 
 %%
 
@@ -78,7 +88,7 @@ if (RQC_err == 0)
         % Over Water quality flags
         overWater(overWater==0) = 1;
         overWater(overWater==128) = 4;
-    
+        
         % Velocity Threshold quality flags
         velThr((abs(radVel) <= maxspd_R)) = 1;
         velThr((abs(radVel) > maxspd_R)) = 4;
@@ -87,11 +97,22 @@ if (RQC_err == 0)
         varThr((varVec > Radial_QC_params.VarThr)) = 4;
         varThr((varVec <= Radial_QC_params.VarThr)) = 1;
         
+        % Temporal Derivative quality flags
+        % TO BE DONE
+        tempDer = varThr; % to be removed
+        
         % Average Radial Bearing quality flag
-        if ((avgBear >= Radial_QC_params.AvgRadBear(1)) && (avgBear <= Radial_QC_params.AvgRadBear(2)))
+        if ((avgBear >= aRB_range(1)) && (avgBear <= aRB_range(2)))
             avgRadBear = 1;
         else
             avgRadBear = 4;
+        end
+        
+        % Radial Count quality flag
+        if (radVectors > Radial_QC_params.RadCnt)
+            radCount = 1;
+        else
+            radCount = 4;
         end
         
         % Median Filter quality flags
@@ -197,7 +218,7 @@ end
 for ii=1:size(overall,1)
     for jj = 1:size(overall,2)
         if(velThr(ii,jj) ~= netcdf.getConstant('NC_FILL_SHORT'))
-            if((varThr(ii,jj) == 1) && (velThr(ii,jj) == 1) && (overWater(ii,jj) == 1) && (medFilt(ii,jj) == 1) && (avgRadBear == 1))
+            if(((varThr(ii,jj) == 1) && tempDer(ii,jj) == 1) && (velThr(ii,jj) == 1) && (overWater(ii,jj) == 1) && (medFilt(ii,jj) == 1) && (avgRadBear == 1) && (radCount == 1))
                 overall(ii,jj) = 1;
             else
                 overall(ii,jj) = 4;

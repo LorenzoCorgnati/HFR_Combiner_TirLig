@@ -2,7 +2,7 @@
 % This application automatically reads Radial data from HF radar
 % installation in Tyrrhenian and Ligurian Sea (MONT, TINO), generates totals
 % and stores radial and total files.
-% Grid: 2 km - Combination Radius: 3 km.
+% Grid: 1.5 km - Combination Radius: 3 km.
 
 % The 1.1 release is able to recover old radial data used for uncomplete
 % total maps generation in order to remake totals using new radial data
@@ -57,7 +57,7 @@
 % CMEMS needs and performs QC tests.
 
 % Author: Lorenzo Corgnati
-% Date: January 26, 2017
+% Date: November 8, 2017
 
 % E-mail: lorenzo.corgnati@sp.ismar.cnr.it
 %%
@@ -65,6 +65,8 @@
 clear all
 close all
 clc
+
+warning('off','all');
 
 display(['[' datestr(now) '] - - ' 'HFR_Combiner_TirLig_v30 started.']);
 
@@ -139,51 +141,63 @@ medFilt = medFilt{1}';
 var_thr_R = textscan(char(param_file(52)), '%f');
 var_thr_R = var_thr_R{1}';
 
+% Temporal Derivative Threshold
+temp_der_thr_R = textscan(char(param_file(54)), '%f');
+temp_der_thr_R = temp_der_thr_R{1}';
+
 % Velocity Threshold
-maxspd_R = textscan(char(param_file(54)), '%f');
+maxspd_R = textscan(char(param_file(56)), '%f');
 maxspd_R = maxspd_R{1}';
 
 % Average Radial Bearing Range
-avgRadBear_R = textscan(char(param_file(56)), '%f');
-avgRadBear_R = avgRadBear_R{1}';
+avgRadBear_str_R = textscan(char(param_file(58)), '%f');
+avgRadBear_R.site(1).code = 'MONT';
+avgRadBear_R.site(1).range = avgRadBear_str_R{1}';
+
+avgRadBear_str_R = textscan(char(param_file(60)), '%f');
+avgRadBear_R.site(2).code = 'TINO';
+avgRadBear_R.site(2).range = avgRadBear_str_R{1}';
+
+% Radial Count Threshold
+radCount_R = textscan(char(param_file(62)), '%f');
+radCount_R = radCount_R{1}';
 
 % Total QC tests thresholds
 % Velocity threshold
-maxspd_T = textscan(char(param_file(58)), '%f');
+maxspd_T = textscan(char(param_file(64)), '%f');
 maxspd_T = maxspd_T{1};
 
 % GDOP threshold
-GDOPthresh = textscan(char(param_file(60)), '%f');
+GDOPthresh = textscan(char(param_file(66)), '%f');
 GDOPthresh = GDOPthresh{1};
 
 % Variance Threshold
-var_thr_T = textscan(char(param_file(62)), '%f');
+var_thr_T = textscan(char(param_file(68)), '%f');
 var_thr_T = var_thr_T{1}';
 
+% Temporal Derivative Threshold
+temp_der_thr_T = textscan(char(param_file(70)), '%f');
+temp_der_thr_T = temp_der_thr_T{1}';
+
 % Data Density Threshold
-dataDens_T = textscan(char(param_file(64)), '%f');
+dataDens_T = textscan(char(param_file(72)), '%f');
 dataDens_T = dataDens_T{1}';
 
-% Balance of cotributing radials Threshold
-balRad_T = textscan(char(param_file(66)), '%f');
-balRad_T = balRad_T{1}';
-
 % Spatial threshold for total generation [km].
-spatthresh = textscan(char(param_file(68)), '%f');
+spatthresh = textscan(char(param_file(74)), '%f');
 spatthresh = spatthresh{1};
 
 % Totals evaluation start and stop times
-start_str = param_file(70);
+start_str = param_file(76);
 start_str = start_str{1};
-stop_str = param_file(72);
+stop_str = param_file(78);
 stop_str = stop_str{1};
 
 % Default number of range cells for radial data
-range_cells_number = textscan(char(param_file(74)), '%f');
+range_cells_number = textscan(char(param_file(80)), '%f');
 range_cells_number = range_cells_number{1};
 
 display(['[' datestr(now) '] - - ' 'Parameters successfully read.']);
-
 
 %%
 
@@ -191,15 +205,17 @@ display(['[' datestr(now) '] - - ' 'Parameters successfully read.']);
 % Radial QC tests parameters
 Radial_QC_params.MedFilt = medFilt;
 Radial_QC_params.VarThr = var_thr_R;
+Radial_QC_params.TempDerThr = temp_der_thr_R;
+Radial_QC_params.RadCnt = radCount_R;
 Radial_QC_params.VelThr = maxspd_R;
 Radial_QC_params.AvgRadBear = avgRadBear_R;
 
 % Total QC tests parameters
 Total_QC_params.GDOPThr = GDOPthresh;
 Total_QC_params.VarThr = var_thr_T;
+Total_QC_params.TempDerThr = temp_der_thr_T;
 Total_QC_params.VelThr = maxspd_T;
 Total_QC_params.DataDensityThr = dataDens_T;
-Total_QC_params.BalRadThr = balRad_T;
 
 %%
 
@@ -556,8 +572,8 @@ while (kk > 0)
             end
             filesCopyTime = toc
             
-            % Clean the radial local working folder
-            rmdir([radProc_folder 'dati-radar'],'s');
+%             % Clean the radial local working folder
+%             rmdir([radProc_folder 'dati-radar'],'s');
             
             clear inputfiles;
         end

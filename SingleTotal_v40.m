@@ -20,12 +20,13 @@
 % compliant to the ISMAR THREDDS requirements.
 
 % The 4.0 release implements the data and metadata structure compliant to
-% CMEMS needs and performs QC tests.
+% CMEMS needs and performs QC tests. In this release, a new graphic
+% visualisation for total maps is implemented.
 
 % This version is designed for HFR_Combiner_TirLig_v21 and next releases.
 
 % Author: Lorenzo Corgnati
-% Date: November 11, 2016
+% Date: November 9, 2017
 
 % E-mail: lorenzo.corgnati@sp.ismar.cnr.it
 %%
@@ -62,6 +63,67 @@ if (sT_err == 0)
             RADIAL(Rds,1) = cleanBearingSector(tmpR);
         end
     end
+end
+
+% Retrieve the Year, Month and Day folder names for the current netCDF file
+year = when(1:4);
+month = when(6:7);
+day = when(9:10);
+yearFolder = year;
+monthFolder = [year '/' year '_' month];
+dayFolder = [monthFolder '/' year '_' month '_' day];
+
+% Saves Radials in netCDF format
+if (sT_err == 0)
+    for rd_idx=1:length(RADIAL)
+        % Check if the proper folders for radial data are existing.
+        % If not, create them.
+        %     if (exist([path_dest_rad RADIAL(rd_idx,1).SiteName '/' yearFolder], 'dir') ~= 7)
+        %         mkdir([path_dest_rad RADIAL(rd_idx,1).SiteName '/' yearFolder]);
+        %     end
+        %     if (exist([path_dest_rad RADIAL(rd_idx,1).SiteName '/' monthFolder], 'dir') ~= 7)
+        %         mkdir([path_dest_rad RADIAL(rd_idx,1).SiteName '/' monthFolder]);
+        %     end
+        %     if (exist([path_dest_rad RADIAL(rd_idx,1).SiteName '/' dayFolder], 'dir') ~= 7)
+        %         mkdir([path_dest_rad RADIAL(rd_idx,1).SiteName '/' dayFolder]);
+        %     end
+        
+        % Set the netCDF destination folder paths for radial data
+        path_dest_rad = [dest_tuvs(1:length(dest_tuvs)-12) 'Radials/netCDF/'];
+        servTH_dest_rad = [serv_netcdf 'TirLig/Radials/v1.0/'];
+        servRD_dest_rad = [dest_serv_tuvs(1:length(dest_serv_tuvs)-12) 'Radials/netCDF/'];
+        
+        if (exist([servRD_dest_rad RADIAL(rd_idx,1).SiteName '/' yearFolder], 'dir') ~= 7)
+            mkdir([servRD_dest_rad RADIAL(rd_idx,1).SiteName '/' yearFolder]);
+        end
+        if (exist([servRD_dest_rad RADIAL(rd_idx,1).SiteName '/' monthFolder], 'dir') ~= 7)
+            mkdir([servRD_dest_rad RADIAL(rd_idx,1).SiteName '/' monthFolder]);
+        end
+        if (exist([servRD_dest_rad RADIAL(rd_idx,1).SiteName '/' dayFolder], 'dir') ~= 7)
+            mkdir([servRD_dest_rad RADIAL(rd_idx,1).SiteName '/' dayFolder]);
+        end
+        
+        if (exist([servTH_dest_rad RADIAL(rd_idx,1).SiteName '/Last/' year '_' month '_' day], 'dir') ~= 7)
+            mkdir([servTH_dest_rad RADIAL(rd_idx,1).SiteName '/Last/' year '_' month '_' day]);
+        end
+        
+        if (exist([path_dest_rad RADIAL(rd_idx,1).SiteName '/Last/' year '_' month '_' day], 'dir') ~= 7)
+            mkdir([path_dest_rad RADIAL(rd_idx,1).SiteName '/Last/' year '_' month '_' day]);
+        end
+        % Create netCDF
+        [sT_err, sitePatternDate(rd_idx,:)] = Radial2netCDF_v20(RADIAL(rd_idx,1), range_cells_number, Radial_QC_params, [path_dest_rad RADIAL(rd_idx,1).SiteName '/Last/' year '_' month '_' day '/'], [servTH_dest_rad RADIAL(rd_idx,1).SiteName '/Last/' year '_' month '_' day '/'], [servRD_dest_rad RADIAL(rd_idx,1).SiteName '/' dayFolder '/']);
+        display(['[' datestr(now) '] - - ' RADIAL(rd_idx,1).SiteName '_' when ' radial netCDF file successfully created and stored.']);
+    end
+end
+
+% Evaluate last pattern date
+if (sT_err == 0)
+    for rd_idx=1:length(RADIAL)
+        patternTS(rd_idx) = datenum([str2double(sitePatternDate(rd_idx, 1:5)) str2double(sitePatternDate(rd_idx, 6:8)) str2double(sitePatternDate(rd_idx, 9:11)) str2double(sitePatternDate(rd_idx, 13:15)) str2double(sitePatternDate(rd_idx, 16:18)) str2double(sitePatternDate(rd_idx, 19:20))]);
+    end
+    lastPatternDate = max(patternTS);
+    lastPatternVec = datevec(lastPatternDate);
+    lastPatternStr = [datestr(lastPatternVec, 'yyyy-mm-dd') 'T' datestr(lastPatternVec, 'HH:MM:SS') 'Z'];
 end
 
 % Totals generation
@@ -108,26 +170,14 @@ if (sT_err == 0)
     for Rds=1:szR
         contrSiteLon(Rds) = RADIAL(Rds,1).SiteOrigin(1);
         contrSiteLat(Rds) = RADIAL(Rds,1).SiteOrigin(2);
-        contrSiteCode(Rds,:) = [RADIAL(Rds,1).SiteName '_' RADIAL(Rds,1).Type(1:4)];
+        %         contrSiteCode(Rds,:) = [RADIAL(Rds,1).SiteName '_' RADIAL(Rds,1).Type(1:4)];
+        contrSiteCode(Rds,:) = RADIAL(Rds,1).SiteName;
     end
     
     % Set the netCDF destination folder paths for total data
     path_dest_tot = [dest_tuvs(1:length(dest_tuvs)-5) 'netCDF/Last/'];
     servTH_dest_tot = [serv_netcdf 'TirLig/Totals/v1.0/Last/'];
     servRD_dest_tot = [dest_serv_tuvs(1:length(dest_serv_tuvs)-5) 'netCDF/'];
-    
-    % Set the netCDF destination folder paths for radial data
-    path_dest_rad = [dest_tuvs(1:length(dest_tuvs)-12) 'Radials/netCDF/'];
-    servTH_dest_rad = [serv_netcdf 'TirLig/Radials/v1.0/'];
-    servRD_dest_rad = [dest_serv_tuvs(1:length(dest_serv_tuvs)-12) 'Radials/netCDF/'];
-    
-    % Retrieve the Year, Month and Day folder names for the current netCDF file
-    year = when(1:4);
-    month = when(6:7);
-    day = when(9:10);
-    yearFolder = year;
-    monthFolder = [year '/' year '_' month];
-    dayFolder = [monthFolder '/' year '_' month '_' day];
     
     % TUV saving
     U_nan = size(find((isnan(TUVmask.U))==1),1);
@@ -256,45 +306,10 @@ if (sT_err == 0)
         close;
         
         % Saves Total in netCDF format
-        sT_err = Total2netCDF_v30(TUVmask, Grid, lon_lim, lat_lim, spatthresh, Total_QC_params, contrSiteLat, contrSiteLon, contrSiteCode, mask_cst, [path_dest_tot year '_' month '_' day '/'], [servTH_dest_tot year '_' month '_' day '/'], [servRD_dest_tot dayFolder '/']);
+        sT_err = Total2netCDF_v30(TUVmask, Grid, lon_lim, lat_lim, spatthresh, Total_QC_params, contrSiteLat, contrSiteLon, contrSiteCode, mask_cst, [path_dest_tot year '_' month '_' day '/'], [servTH_dest_tot year '_' month '_' day '/'], [servRD_dest_tot dayFolder '/'], lastPatternStr);
         display(['[' datestr(now) '] - - ' when ' total netCDF file successfully created and stored.']);
     end
 end
 
-% Saves Radials in netCDF format
-if (sT_err == 0)
-    for rd_idx=1:length(RADIAL)
-        % Check if the proper folders for radial data are existing.
-        % If not, create them.
-        %     if (exist([path_dest_rad RADIAL(rd_idx,1).SiteName '/' yearFolder], 'dir') ~= 7)
-        %         mkdir([path_dest_rad RADIAL(rd_idx,1).SiteName '/' yearFolder]);
-        %     end
-        %     if (exist([path_dest_rad RADIAL(rd_idx,1).SiteName '/' monthFolder], 'dir') ~= 7)
-        %         mkdir([path_dest_rad RADIAL(rd_idx,1).SiteName '/' monthFolder]);
-        %     end
-        %     if (exist([path_dest_rad RADIAL(rd_idx,1).SiteName '/' dayFolder], 'dir') ~= 7)
-        %         mkdir([path_dest_rad RADIAL(rd_idx,1).SiteName '/' dayFolder]);
-        %     end
-        
-        if (exist([servRD_dest_rad RADIAL(rd_idx,1).SiteName '/' yearFolder], 'dir') ~= 7)
-            mkdir([servRD_dest_rad RADIAL(rd_idx,1).SiteName '/' yearFolder]);
-        end
-        if (exist([servRD_dest_rad RADIAL(rd_idx,1).SiteName '/' monthFolder], 'dir') ~= 7)
-            mkdir([servRD_dest_rad RADIAL(rd_idx,1).SiteName '/' monthFolder]);
-        end
-        if (exist([servRD_dest_rad RADIAL(rd_idx,1).SiteName '/' dayFolder], 'dir') ~= 7)
-            mkdir([servRD_dest_rad RADIAL(rd_idx,1).SiteName '/' dayFolder]);
-        end
-        
-        if (exist([servTH_dest_rad RADIAL(rd_idx,1).SiteName '/Last/' year '_' month '_' day], 'dir') ~= 7)
-            mkdir([servTH_dest_rad RADIAL(rd_idx,1).SiteName '/Last/' year '_' month '_' day]);
-        end
-        
-        if (exist([path_dest_rad RADIAL(rd_idx,1).SiteName '/Last/' year '_' month '_' day], 'dir') ~= 7)
-            mkdir([path_dest_rad RADIAL(rd_idx,1).SiteName '/Last/' year '_' month '_' day]);
-        end
-        sT_err = Radial2netCDF_v20(RADIAL(rd_idx,1), range_cells_number, Radial_QC_params, [path_dest_rad RADIAL(rd_idx,1).SiteName '/Last/' year '_' month '_' day '/'], [servTH_dest_rad RADIAL(rd_idx,1).SiteName '/Last/' year '_' month '_' day '/'], [servRD_dest_rad RADIAL(rd_idx,1).SiteName '/' dayFolder '/']);
-        display(['[' datestr(now) '] - - ' RADIAL(rd_idx,1).SiteName '_' when ' radial netCDF file successfully created and stored.']);
-    end
-end
+
 return

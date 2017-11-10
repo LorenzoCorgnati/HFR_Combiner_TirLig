@@ -31,32 +31,34 @@
 %         search_radius: radius where radials are collected for the
 %         combination of each total.
 %         Total_QC_params: structure containing parameters for total QC tests
+%         sitesCodes: codes of the contributing radar sites.
 %         mask: masking map (not used).
 %         dest_nc_tot : destination folder where to save the netCDF file
 %         servTH_nc_tot: THREDDS server address.
 %         servRD_nc_tot: ISMAR SP disk address.
+%         lastPatternStr: string containing the last pattern measurement date
 
 % OUTPUT:
 %         T2C_err: error flag (0 = correct, 1 = error)
 
 
 % Author: Lorenzo Corgnati
-% Date: November 11, 2016
+% Date: November 9, 2017
 
 % E-mail: lorenzo.corgnati@sp.ismar.cnr.it
 %%
 
-function [T2C_err] = Total2netCDF_v30(mat_tot, grid, map_lon_lim, map_lat_lim, search_radius, Total_QC_params, sitesLat, sitesLon, sitesCodes, mask, dest_nc_tot, servTH_nc_tot, servRD_nc_tot)
+function [T2C_err] = Total2netCDF_v30(mat_tot, grid, map_lon_lim, map_lat_lim, search_radius, Total_QC_params, sitesLat, sitesLon, sitesCodes, mask, dest_nc_tot, servTH_nc_tot, servRD_nc_tot, lastPatternStr)
 
 display(['[' datestr(now) '] - - ' 'Total2netCDF_v30.m started.']);
 
 T2C_err = 0;
 
-%% Prepares data
+%% Prepare data
 % Set netcdf format
 ncfmt = 'netcdf4_classic';
 
-% Sets total data on a regular grid.
+% Set total data on a regular grid.
 try
     lonGrid = unique(mat_tot.LonLat(:,1));
     latGrid = unique(mat_tot.LonLat(:,2));
@@ -120,28 +122,33 @@ end
 % Gets dimensions
 if (T2C_err == 0)
     try
-%        time_dim = size(mat_tot.TimeStamp,1);
-        time_dim = netcdf.getConstant('unlimited');
+        time_dim = size(mat_tot.TimeStamp,1);
+%         time_dim = netcdf.getConstant('unlimited');
         lat_dim = size(latGrid,1);
         lon_dim = size(lonGrid,1);
-        nSites_dim = length(sitesLat);
         depth_dim = 1;
+        maxSite_dim = 50;
+        string15_dim = 15;
     catch err
         display(['[' datestr(now) '] - - ' err.message]);
         T2C_err = 1;
     end
 end
 
-% Sets reference time
+% Set reference time
+% if (T2C_err == 0)
+%     timeref = datenum(1970,1,1);
+%     time_units = ['seconds since ' datestr(timeref, 'yyyy-mm-dd') 'T' datestr(timeref, 'HH:MM:SS') 'Z'];
+%     [year,mon,day,hr,minutes,sec] = datevec(timeref);
+% end
+
 if (T2C_err == 0)
-    timeref = datenum(1970,1,1);
-    time_units = ['seconds since ' datestr(timeref, 'yyyy-mm-dd') 'T' datestr(timeref, 'HH:MM:SS') 'Z'];
+    timeref = datenum(1950,1,1);
+    time_units = ['days since ' datestr(timeref, 'yyyy-mm-dd') 'T' datestr(timeref, 'HH:MM:SS') 'Z'];
     [year,mon,day,hr,minutes,sec] = datevec(timeref);
-%    base_stamp = sprintf('%.4d, %.2d, %.2d, %.2d',year,mon,day,hr);
-%    time_units = sprintf('seconds since %.4d-%.2d-%.2d %.2d:%.2d:%.2d',year,mon,day,hr,minutes,sec);
 end
 
-% Sets data creation time and date and start and stop time and date of the
+% Set data creation time and date and start and stop time and date of the
 % data time window.
 if (T2C_err == 0)
     try
@@ -165,7 +172,7 @@ if (T2C_err == 0)
     end
 end
 
-% Sets ADCC compliant data creation, coverage times and spatial resolution.
+% Set ADCC compliant data creation, coverage times and spatial resolution.
 if (T2C_err == 0)
     try
         % File creation datetime
@@ -184,7 +191,7 @@ if (T2C_err == 0)
     end
 end
 
-% Sets nc output file name and citation string
+% Set nc output file name and citation string
 if (T2C_err == 0)
     try
         ts = datevec(mat_tot.TimeStamp);
@@ -222,7 +229,7 @@ procParamsVec = [single(Total_QC_params.GDOPThr), single(Total_QC_params.VelThr/
 %%
 
 %% Perform QC tests
-[overall_QCflag, varianceThreshold_QCflag, GDOP_QCflag, dataDensity_QCflag, radialBalance_QCflag, velocityThreshold_QCflag] = TotalQCtests_v10(mat_tot, Total_QC_params);
+[overall_QCflag, varianceThreshold_QCflag, temporalDerivativeThreshold_QCflag, GDOP_QCflag, dataDensity_QCflag, velocityThreshold_QCflag] = TotalQCtests_v10(mat_tot, Total_QC_params);
 
 %%
 
@@ -231,7 +238,7 @@ if (T2C_err == 0)
     try
         nccreate(ncfile,'TIME',...
             'Dimensions',{'TIME',time_dim},...
-            'Datatype','int32',...
+            'Datatype','single',...
             'Format',ncfmt);
         
         nccreate(ncfile,'LATITUDE',...
@@ -291,7 +298,7 @@ if (T2C_err == 0)
             'FillValue',netcdf.getConstant('NC_FILL_SHORT'),...
             'Format',ncfmt);
         
-        nccreate(ncfile,'VAR_QC',...
+        nccreate(ncfile,'VART_QC',...
             'Dimensions',{'LONGITUDE',lon_dim,'LATITUDE',lat_dim, 'DEPH', depth_dim, 'TIME',time_dim},...
             'Datatype','int16',...
             'FillValue',netcdf.getConstant('NC_FILL_SHORT'),...
@@ -303,13 +310,7 @@ if (T2C_err == 0)
             'FillValue',netcdf.getConstant('NC_FILL_SHORT'),...
             'Format',ncfmt);
         
-        nccreate(ncfile,'Density_QC',...
-            'Dimensions',{'LONGITUDE',lon_dim,'LATITUDE',lat_dim, 'DEPH', depth_dim, 'TIME',time_dim},...
-            'Datatype','int16',...
-            'FillValue',netcdf.getConstant('NC_FILL_SHORT'),...
-            'Format',ncfmt);
-        
-        nccreate(ncfile,'Balance_QC',...
+        nccreate(ncfile,'DDNS_QC',...
             'Dimensions',{'LONGITUDE',lon_dim,'LATITUDE',lat_dim, 'DEPH', depth_dim, 'TIME',time_dim},...
             'Datatype','int16',...
             'FillValue',netcdf.getConstant('NC_FILL_SHORT'),...
@@ -320,25 +321,53 @@ if (T2C_err == 0)
             'Datatype','int16',...
             'FillValue',netcdf.getConstant('NC_FILL_SHORT'),...
             'Format',ncfmt);
-             
-        nccreate(ncfile,'SLAT',...
-            'Dimensions',{'NSIT', nSites_dim},...
-            'Datatype','single',...
+        
+        nccreate(ncfile,'NARX',...
+            'Dimensions',{'TIME',time_dim},...
+            'Datatype','int16',...
+            'FillValue',netcdf.getConstant('NC_FILL_SHORT'),...
             'Format',ncfmt);
         
-        nccreate(ncfile,'SLON',...
-            'Dimensions',{'NSIT', nSites_dim},...
+        nccreate(ncfile,'NATX',...
+            'Dimensions',{'TIME',time_dim},...
+            'Datatype','int16',...
+            'FillValue',netcdf.getConstant('NC_FILL_SHORT'),...
+            'Format',ncfmt);
+        
+        nccreate(ncfile,'SLTR',...
+            'Dimensions',{'MAXSITE',maxSite_dim,'TIME',time_dim},...
             'Datatype','single',...
+            'FillValue',netcdf.getConstant('NC_FILL_FLOAT'),...
+            'Format',ncfmt);
+        
+        nccreate(ncfile,'SLNR',...
+            'Dimensions',{'MAXSITE',maxSite_dim,'TIME',time_dim},...
+            'Datatype','single',...
+            'FillValue',netcdf.getConstant('NC_FILL_FLOAT'),...
+            'Format',ncfmt);
+             
+        nccreate(ncfile,'SLTT',...
+            'Dimensions',{'MAXSITE',maxSite_dim,'TIME',time_dim},...
+            'Datatype','single',...
+            'FillValue',netcdf.getConstant('NC_FILL_FLOAT'),...
+            'Format',ncfmt);
+        
+        nccreate(ncfile,'SLNT',...
+            'Dimensions',{'MAXSITE',maxSite_dim,'TIME',time_dim},...
+            'Datatype','single',...
+            'FillValue',netcdf.getConstant('NC_FILL_FLOAT'),...
+            'Format',ncfmt);
+        
+        nccreate(ncfile,'SCDR',...
+            'Dimensions',{'STRING15',string15_dim,'MAXSITE',maxSite_dim,'TIME',time_dim},...
+            'Datatype','char',...
+            'FillValue',netcdf.getConstant('NC_FILL_CHAR'),...
             'Format',ncfmt);
                 
-        nccreate(ncfile,'SCOD',...
-            'Dimensions',{'SMXL', 9,'NSIT',nSites_dim},...
+        nccreate(ncfile,'SCDT',...
+            'Dimensions',{'STRING15',string15_dim,'MAXSITE',maxSite_dim,'TIME',time_dim},...
             'Datatype','char',...
-            'Format',ncfmt);
-        
-        nccreate(ncfile,'LMSK',...
-            'Dimensions',{'NLMK', 1},...
-            'Datatype','int8',...
+            'FillValue',netcdf.getConstant('NC_FILL_CHAR'),...
             'Format',ncfmt);
         
         nccreate(ncfile,'PRPC',...
@@ -349,7 +378,6 @@ if (T2C_err == 0)
         %% Creates attributes for the variables
         ncwriteatt(ncfile,'TIME','long_name',char('Time of Measurement UTC'));
         ncwriteatt(ncfile,'TIME','standard_name',char('time'));
-%         ncwriteatt(ncfile,'TIME','base_date',char(base_stamp));
         ncwriteatt(ncfile,'TIME','units',char(time_units));
         ncwriteatt(ncfile,'TIME','calendar',char('Gregorian'));
         ncwriteatt(ncfile,'TIME','axis',char('T'));
@@ -379,9 +407,9 @@ if (T2C_err == 0)
         ncwriteatt(ncfile,'EWCT','ioos_category',char('Currents'));
         ncwriteatt(ncfile,'EWCT','coordsys',char('geographic'));
 %        ncwriteatt(ncfile,'EWCT','cell_methods',char('time: mean over hours time'));
-        ncwriteatt(ncfile,'EWCT','valid_range',[double(-3000.0),double(3000.0)]);
-%         ncwriteatt(ncfile,'EWCT','valid_min',double(-3000.0));
-%         ncwriteatt(ncfile,'EWCT','valid_max',double(3000.0));
+        ncwriteatt(ncfile,'EWCT','valid_range',[double(-10.0),double(10.0)]);
+%         ncwriteatt(ncfile,'EWCT','valid_min',double(-10.0));
+%         ncwriteatt(ncfile,'EWCT','valid_max',double(10.0));
         
         ncwriteatt(ncfile,'NSCT','long_name',char('Surface Northward Sea Water Velocity'));
         ncwriteatt(ncfile,'NSCT','standard_name',char('surface_northward_sea_water_velocity'));
@@ -391,43 +419,43 @@ if (T2C_err == 0)
         ncwriteatt(ncfile,'NSCT','ioos_category',char('Currents'));
         ncwriteatt(ncfile,'NSCT','coordsys',char('geographic'));
 %        ncwriteatt(ncfile,'NSCT','cell_methods',char('time: mean over hours time'));
-        ncwriteatt(ncfile,'NSCT','valid_range',[double(-3000.0),double(3000.0)]);
-%         ncwriteatt(ncfile,'NSCT','valid_min',double(-3000.0));
-%         ncwriteatt(ncfile,'NSCT','valid_max',double(3000.0));
+        ncwriteatt(ncfile,'NSCT','valid_range',[double(-10.0),double(10.0)]);
+%         ncwriteatt(ncfile,'NSCT','valid_min',double(-10.0));
+%         ncwriteatt(ncfile,'NSCT','valid_max',double(10.0));
         
         ncwriteatt(ncfile,'EWCS','long_name',char('Standard Deviation of Surface Eastward Sea Water Velocity'));
 %        ncwriteatt(ncfile,'EWCS','standard_name',char('surface_eastward_sea_water_velocity_standard_error'));
         ncwriteatt(ncfile,'EWCS','units',char('m s-1'));
-        ncwriteatt(ncfile,'EWCS','valid_range',[double(-3000.0),double(3000.0)]);
-%         ncwriteatt(ncfile,'EWCS','valid_min',double(-3000.0));
-%         ncwriteatt(ncfile,'EWCS','valid_max',double(3000.0));
+        ncwriteatt(ncfile,'EWCS','valid_range',[double(-10.0),double(10.0)]);
+%         ncwriteatt(ncfile,'EWCS','valid_min',double(-10.0));
+%         ncwriteatt(ncfile,'EWCS','valid_max',double(10.0));
         ncwriteatt(ncfile,'EWCS','scale_factor',double(1));
         ncwriteatt(ncfile,'EWCS','add_offset',double(0));
         
         ncwriteatt(ncfile,'NSCS','long_name',char('Standard Deviation of Surface Northward Sea Water Velocity'));
 %        ncwriteatt(ncfile,'NSCS','standard_name',char('surface_northward_sea_water_velocity_standard_error'));
         ncwriteatt(ncfile,'NSCS','units',char('m s-1'));
-        ncwriteatt(ncfile,'NSCS','valid_range',[double(-3000.0),double(3000.0)]);
-%         ncwriteatt(ncfile,'NSCS','valid_min',double(-3000.0));
-%         ncwriteatt(ncfile,'NSCS','valid_max',double(3000.0));
+        ncwriteatt(ncfile,'NSCS','valid_range',[double(-10.0),double(10.0)]);
+%         ncwriteatt(ncfile,'NSCS','valid_min',double(-10.0));
+%         ncwriteatt(ncfile,'NSCS','valid_max',double(10.0));
         ncwriteatt(ncfile,'NSCS','scale_factor',double(1));
         ncwriteatt(ncfile,'NSCS','add_offset',double(0));
         
         ncwriteatt(ncfile,'CCOV','long_name',char('Covariance of Surface Sea Water Velocity'));
 %         ncwriteatt(ncfile,'CCOV','standard_name',char('surface_sea_water_velocity_covariance'));
         ncwriteatt(ncfile,'CCOV','units',char('m2 s-2'));
-        ncwriteatt(ncfile,'CCOV','valid_range',[double(-3000.0),double(3000.0)]);
-%         ncwriteatt(ncfile,'CCOV','valid_min',double(-3000.0));
-%         ncwriteatt(ncfile,'CCOV','valid_max',double(3000.0));
+        ncwriteatt(ncfile,'CCOV','valid_range',[double(-10.0),double(10.0)]);
+%         ncwriteatt(ncfile,'CCOV','valid_min',double(-10.0));
+%         ncwriteatt(ncfile,'CCOV','valid_max',double(10.0));
         ncwriteatt(ncfile,'CCOV','scale_factor',double(1));
         ncwriteatt(ncfile,'CCOV','add_offset',double(0));
         
         ncwriteatt(ncfile,'GDOP','long_name',char('Geometrical Dilution of precision'));
 %         ncwriteatt(ncfile,'GDOP','standard_name',char('gdop'));
         ncwriteatt(ncfile,'GDOP','units',char('1'));
-        ncwriteatt(ncfile,'GDOP','valid_range',[double(-100.0),double(100.0)]);
-%         ncwriteatt(ncfile,'GDOP','valid_min',double(-100.0));
-%         ncwriteatt(ncfile,'GDOP','valid_max',double(100.0));
+        ncwriteatt(ncfile,'GDOP','valid_range',[double(-20.0),double(20.0)]);
+%         ncwriteatt(ncfile,'GDOP','valid_min',double(-20.0));
+%         ncwriteatt(ncfile,'GDOP','valid_max',double(20.0));
         ncwriteatt(ncfile,'GDOP','scale_factor',double(1));
         ncwriteatt(ncfile,'GDOP','add_offset',double(0));
         ncwriteatt(ncfile,'GDOP','comment',char(['The Geometric Dilution of Precision (GDOP) is the coefficient of the uncertainty, which relates the uncertainties in radial and velocity vectors.' ...
@@ -441,75 +469,100 @@ if (T2C_err == 0)
         ncwriteatt(ncfile,'QCflag','valid_range',int16([0 9]));
         ncwriteatt(ncfile,'QCflag','flag_values',int16([0 1 2 3 4 7 8 9]));
         ncwriteatt(ncfile,'QCflag','flag_meanings',char('unknown good_data probably_good_data potentially_correctable_bad_data bad_data nominal_value interpolated_value missing_value'));
-        ncwriteatt(ncfile,'QCflag','comment',char('OceanSITES quality flagging for all QC tests'));
+        ncwriteatt(ncfile,'QCflag','comment',char('OceanSITES quality flagging for all QC tests.'));
         ncwriteatt(ncfile,'QCflag','scale_factor',int16(1));
         ncwriteatt(ncfile,'QCflag','add_offset',int16(0));
         
-        ncwriteatt(ncfile,'VAR_QC','long_name',char('Variance Threshold Quality flags'));
-        ncwriteatt(ncfile,'VAR_QC','units',char('1'));
-        ncwriteatt(ncfile,'VAR_QC','valid_range',int16([0 9]));
-        ncwriteatt(ncfile,'VAR_QC','flag_values',int16([0 1 2 3 4 7 8 9]));
-        ncwriteatt(ncfile,'VAR_QC','flag_meanings',char('unknown good_data probably_good_data potentially_correctable_bad_data bad_data nominal_value interpolated_value missing_value'));
-        ncwriteatt(ncfile,'VAR_QC','comment',char('OceanSITES quality flagging for variance threshold QC test. Threshold set to m2/s2'));
-        ncwriteatt(ncfile,'VAR_QC','scale_factor',int16(1));
-        ncwriteatt(ncfile,'VAR_QC','add_offset',int16(0));
+        ncwriteatt(ncfile,'VART_QC','long_name',char('Variance Threshold Quality flags'));
+        ncwriteatt(ncfile,'VART_QC','units',char('1'));
+        ncwriteatt(ncfile,'VART_QC','valid_range',int16([0 9]));
+        ncwriteatt(ncfile,'VART_QC','flag_values',int16([0 1 2 3 4 7 8 9]));
+        ncwriteatt(ncfile,'VART_QC','flag_meanings',char('unknown good_data probably_good_data potentially_correctable_bad_data bad_data nominal_value interpolated_value missing_value'));
+        ncwriteatt(ncfile,'VART_QC','comment',char(['OceanSITES quality flagging for variance threshold QC test. ' ...
+            'Test not applicable to Direction Finding systems. The Temporal Derivative test is applied.' ...
+            'Threshold set to ' num2str(Total_QC_params.TempDerThr) ' m/s. ']));
+        ncwriteatt(ncfile,'VART_QC','scale_factor',int16(1));
+        ncwriteatt(ncfile,'VART_QC','add_offset',int16(0));
         
         ncwriteatt(ncfile,'GDOP_QC','long_name',char('GDOP Threshold Quality flags'));
         ncwriteatt(ncfile,'GDOP_QC','units',char('1'));
         ncwriteatt(ncfile,'GDOP_QC','valid_range',int16([0 9]));
         ncwriteatt(ncfile,'GDOP_QC','flag_values',int16([0 1 2 3 4 7 8 9]));
         ncwriteatt(ncfile,'GDOP_QC','flag_meanings',char('unknown good_data probably_good_data potentially_correctable_bad_data bad_data nominal_value interpolated_value missing_value'));
-        ncwriteatt(ncfile,'GDOP_QC','comment',char(['OceanSITES quality flagging for GDOP threshold QC test. Threshold set to ' Total_QC_params.GDOPThr '.']));
+        ncwriteatt(ncfile,'GDOP_QC','comment',char(['OceanSITES quality flagging for GDOP threshold QC test. ' ...
+            'Threshold set to ' num2str(Total_QC_params.GDOPThr) '.']));
         ncwriteatt(ncfile,'GDOP_QC','scale_factor',int16(1));
         ncwriteatt(ncfile,'GDOP_QC','add_offset',int16(0));
         
-        ncwriteatt(ncfile,'Density_QC','long_name',char('Data density Threshold Quality flags'));
-        ncwriteatt(ncfile,'Density_QC','units',char('1'));
-        ncwriteatt(ncfile,'Density_QC','valid_range',int16([0 9]));
-        ncwriteatt(ncfile,'Density_QC','flag_values',int16([0 1 2 3 4 7 8 9]));
-        ncwriteatt(ncfile,'Density_QC','flag_meanings',char('unknown good_data probably_good_data potentially_correctable_bad_data bad_data nominal_value interpolated_value missing_value'));
-        ncwriteatt(ncfile,'Density_QC','comment',char('OceanSITES quality flagging for Data density threshold QC test. Threshold set to contributing radials.'));
-        ncwriteatt(ncfile,'Density_QC','scale_factor',int16(1));
-        ncwriteatt(ncfile,'Density_QC','add_offset',int16(0));
-        
-        ncwriteatt(ncfile,'Balance_QC','long_name',char('Balance of number of radials from each contributing site Quality flags'));
-        ncwriteatt(ncfile,'Balance_QC','units',char('1'));
-        ncwriteatt(ncfile,'Balance_QC','valid_range',int16([0 9]));
-        ncwriteatt(ncfile,'Balance_QC','flag_values',int16([0 1 2 3 4 7 8 9]));
-        ncwriteatt(ncfile,'Balance_QC','flag_meanings',char('unknown good_data probably_good_data potentially_correctable_bad_data bad_data nominal_value interpolated_value missing_value'));
-        ncwriteatt(ncfile,'Balance_QC','comment',char('OceanSITES quality flagging for Balance of number of radials from each contributing site QC test. Balance threshold set to .'));
-        ncwriteatt(ncfile,'Balance_QC','scale_factor',int16(1));
-        ncwriteatt(ncfile,'Balance_QC','add_offset',int16(0));
-        
+        ncwriteatt(ncfile,'DDNS_QC','long_name',char('Data density Threshold Quality flags'));
+        ncwriteatt(ncfile,'DDNS_QC','units',char('1'));
+        ncwriteatt(ncfile,'DDNS_QC','valid_range',int16([0 9]));
+        ncwriteatt(ncfile,'DDNS_QC','flag_values',int16([0 1 2 3 4 7 8 9]));
+        ncwriteatt(ncfile,'DDNS_QC','flag_meanings',char('unknown good_data probably_good_data potentially_correctable_bad_data bad_data nominal_value interpolated_value missing_value'));
+        ncwriteatt(ncfile,'DDNS_QC','comment',char(['OceanSITES quality flagging for Data density threshold QC test. ' ...
+            'Threshold set to ' num2str(Total_QC_params.DataDensityThr) ' radials.']));
+        ncwriteatt(ncfile,'DDNS_QC','scale_factor',int16(1));
+        ncwriteatt(ncfile,'DDNS_QC','add_offset',int16(0));
+         
         ncwriteatt(ncfile,'CSPD_QC','long_name',char('Velocity threshold Quality flags'));
         ncwriteatt(ncfile,'CSPD_QC','units',char('1'));
         ncwriteatt(ncfile,'CSPD_QC','valid_range',int16([0 9]));
         ncwriteatt(ncfile,'CSPD_QC','flag_values',int16([0 1 2 3 4 7 8 9]));
         ncwriteatt(ncfile,'CSPD_QC','flag_meanings',char('unknown good_data probably_good_data potentially_correctable_bad_data bad_data nominal_value interpolated_value missing_value'));
-        ncwriteatt(ncfile,'CSPD_QC','comment',char('OceanSITES quality flagging for Velocity threshold QC test. Threshold set to m/s.'));
+        ncwriteatt(ncfile,'CSPD_QC','comment',char(['OceanSITES quality flagging for Velocity threshold QC test. ' ...
+            'Threshold set to ' num2str(Total_QC_params.VelThr) ' m/s.']));
         ncwriteatt(ncfile,'CSPD_QC','scale_factor',int16(1));
         ncwriteatt(ncfile,'CSPD_QC','add_offset',int16(0));
         
-        ncwriteatt(ncfile,'SLAT','long_name',char('Contributing radar site latitudes'));
-        ncwriteatt(ncfile,'SLAT','standard_name',char('latitude'));
-        ncwriteatt(ncfile,'SLAT','units','degrees_north');
+        ncwriteatt(ncfile,'NARX','long_name',char('Number of Receive Antennas'));
+        ncwriteatt(ncfile,'NARX','units',char('1'));
+        ncwriteatt(ncfile,'NARX','valid_range',int16([0 maxSite_dim]));
+        ncwriteatt(ncfile,'NARX','scale_factor',int16(1));
+        ncwriteatt(ncfile,'NARX','add_offset',int16(0));
         
-        ncwriteatt(ncfile,'SLON','long_name',char('Contributing radar site longitudes'));
-        ncwriteatt(ncfile,'SLON','standard_name',char('longitude'));
-        ncwriteatt(ncfile,'SLON','units','degrees_east');
+        ncwriteatt(ncfile,'NATX','long_name',char('Number of Transmit Antennas'));
+        ncwriteatt(ncfile,'NATX','units',char('1'));
+        ncwriteatt(ncfile,'NATX','valid_range',int16([0 maxSite_dim]));
+        ncwriteatt(ncfile,'NATX','scale_factor',int16(1));
+        ncwriteatt(ncfile,'NATX','add_offset',int16(0));
         
-        ncwriteatt(ncfile,'SCOD','long_name',char('Contributing radar site codes'));
-        ncwriteatt(ncfile,'SCOD','comment',char(['RDLI: Ideal Antenna Pattern is applied to the radial data.'...
-            ' RDLM: Measured Antenna Pattern is applied to the radial data.']));
+        ncwriteatt(ncfile,'SLTR','long_name',char('Receive Antennas Latitudes'));
+        ncwriteatt(ncfile,'SLTR','standard_name',char('latitude'));
+        ncwriteatt(ncfile,'SLTR','units','degrees_north');
+        ncwriteatt(ncfile,'SLTR','valid_range',single([-90 90]));
+        ncwriteatt(ncfile,'SLTR','scale_factor',single(1));
+        ncwriteatt(ncfile,'SLTR','add_offset',single(0));
         
-        ncwriteatt(ncfile,'LMSK','long_name',char('Flag for masking dry grid points'));
-%         ncwriteatt(ncfile,'LMSK','standard_name',char('land_mask'));
-        ncwriteatt(ncfile,'LMSK','units',char('1'));
-        ncwriteatt(ncfile,'LMSK','comment',char(['Flag = 0: masking inactive' ...
-            ' Flag = 1: masking active']));
+        ncwriteatt(ncfile,'SLNR','long_name',char('Receive Antennas Longitudes'));
+        ncwriteatt(ncfile,'SLNR','standard_name',char('longitude'));
+        ncwriteatt(ncfile,'SLNR','units','degrees_east');
+        ncwriteatt(ncfile,'SLNR','valid_range',single([-180 180]));
+        ncwriteatt(ncfile,'SLNR','scale_factor',single(1));
+        ncwriteatt(ncfile,'SLNR','add_offset',single(0));
         
+        ncwriteatt(ncfile,'SLTT','long_name',char('Transmit Antennas Latitudes'));
+        ncwriteatt(ncfile,'SLTT','standard_name',char('latitude'));
+        ncwriteatt(ncfile,'SLTT','units','degrees_north');
+        ncwriteatt(ncfile,'SLTT','valid_range',single([-90 90]));
+        ncwriteatt(ncfile,'SLTT','scale_factor',single(1));
+        ncwriteatt(ncfile,'SLTT','add_offset',single(0));
+        
+        ncwriteatt(ncfile,'SLNT','long_name',char('Transmit Antennas Longitudes'));
+        ncwriteatt(ncfile,'SLNT','standard_name',char('longitude'));
+        ncwriteatt(ncfile,'SLNT','units','degrees_east');
+        ncwriteatt(ncfile,'SLNT','valid_range',single([-180 180]));
+        ncwriteatt(ncfile,'SLNT','scale_factor',single(1));
+        ncwriteatt(ncfile,'SLNT','add_offset',single(0));       
+        
+        ncwriteatt(ncfile,'SCDR','long_name',char('Receive antenna Codes'));
+%         ncwriteatt(ncfile,'SCOD','comment',char(['RDLI: Ideal Antenna Pattern is applied to the radial data.'...
+%             ' RDLM: Measured Antenna Pattern is applied to the radial data.']));
+
+        ncwriteatt(ncfile,'SCDT','long_name',char('Transmit antenna Codes'));
+%         ncwriteatt(ncfile,'SCOD','comment',char(['RDLI: Ideal Antenna Pattern is applied to the radial data.'...
+%             ' RDLM: Measured Antenna Pattern is applied to the radial data.']));
+    
         ncwriteatt(ncfile,'PRPC','long_name',char('Near Real Time data processing parameters'));
-%         ncwriteatt(ncfile,'PRPC','standard_name',char('processing_parameters'));
         ncwriteatt(ncfile,'PRPC','units',char('1'));
         ncwriteatt(ncfile,'PRPC','comment',char(['01) Maximum GDOP threshold'...
             ' 02) Maximum velocity threshold [m/s]' ...
@@ -524,7 +577,8 @@ if (T2C_err == 0)
             ' 11) Spatial Resolution [km]']));
         
         %% Writes values in variables
-        ncwrite(ncfile,'TIME',int32((mat_tot.TimeStamp-timeref)*86400));
+%         ncwrite(ncfile,'TIME',int32((mat_tot.TimeStamp-timeref)*86400));
+        ncwrite(ncfile,'TIME',single(mat_tot.TimeStamp-timeref));
         ncwrite(ncfile,'LATITUDE',latGrid);
         ncwrite(ncfile,'LONGITUDE',lonGrid);
         ncwrite(ncfile,'DEPH',depth);
@@ -534,103 +588,117 @@ if (T2C_err == 0)
         ncwrite(ncfile,'NSCS',V_std);
         ncwrite(ncfile,'CCOV',covariance);
         ncwrite(ncfile,'GDOP',GDOP);
-        ncwrite(ncfile,'SLAT',sitesLat);
-        ncwrite(ncfile,'SLON',sitesLon);
-        ncwrite(ncfile,'SCOD',sitesCodes');
-        ncwrite(ncfile,'LMSK',double(1));
+        ncwrite(ncfile,'NARX',length(sitesLat));
+        ncwrite(ncfile,'NATX',length(sitesLat));       
+        ncwrite(ncfile,'SLTR',sitesLat');
+        ncwrite(ncfile,'SLNR',sitesLon');
+        ncwrite(ncfile,'SLTT',sitesLat');
+        ncwrite(ncfile,'SLNT',sitesLon');       
+        ncwrite(ncfile,'SCDR',sitesCodes');
+        ncwrite(ncfile,'SCDT',sitesCodes');
         ncwrite(ncfile,'PRPC',procParamsVec);
         ncwrite(ncfile,'QCflag',overall_QCflag);
-        ncwrite(ncfile,'VAR_QC',varianceThreshold_QCflag);
+        ncwrite(ncfile,'VART_QC',temporalDerivativeThreshold_QCflag);
         ncwrite(ncfile,'GDOP_QC',GDOP_QCflag);
-        ncwrite(ncfile,'Density_QC',dataDensity_QCflag);
-        ncwrite(ncfile,'Balance_QC',radialBalance_QCflag);
+        ncwrite(ncfile,'DDNS_QC',dataDensity_QCflag);
         ncwrite(ncfile,'CSPD_QC',velocityThreshold_QCflag);
         
-        %% Defines global attributes
-        ncwriteatt(ncfile,'/','title',char('Near Real Time Surface Ocean Velocity'));
-        ncwriteatt(ncfile,'/','institution',char('National Research Council - Institute of Marine Science, U.O.S. La Spezia'));
-        ncwriteatt(ncfile,'/','Conventions',char('CF-1.6, Unidata, OceanSITES, ACDD, INSPIRE'));
-        ncwriteatt(ncfile,'/','summary',char('The data set consists of maps of total velocity of the surface current in the North-Western Tyrrhenian Sea and Ligurian Sea averaged over a time interval of 1 hour around the cardinal hour. Surface ocean velocities estimated by HF Radar are representative of the upper 0.3-2.5 meters of the ocean. The main objective of near real time processing is to produce the best product from available data at the time of processing. Total velocities are derived using least square fit that maps radial velocities measured from individual sites onto a cartesian grid. The final product is a map of the horizontal components of the ocean currents on a regular grid in the area of overlap of two or more radar stations.'));
+        %% Define global attributes
+        
+        % MANDATORY ATTRIBUTES
+        % Discovery and Identification
+        ncwriteatt(ncfile,'/','site_code',char('TirLig'));
+        ncwriteatt(ncfile,'/','platform_code',char('TirLig_Tot'));
+%         ncwriteatt(ncfile,'/','platform',char('CNR-ISMAR HF Radar Network'));
+        ncwriteatt(ncfile,'/','data_mode',char('R'));
+        ncwriteatt(ncfile,'/','DoA_estimation_method',char('Direction Finding'));
+        ncwriteatt(ncfile,'/','calibration_type',char('APM'));
+        ncwriteatt(ncfile,'/','last_calibration_date',char(lastPatternStr));
+        ncwriteatt(ncfile,'/','calibration_link',char('carlo.mantovani@cnr.it'));
+        ncwriteatt(ncfile,'/','title',char('Near Real Time Surface Ocean Velocity by TirLig'));
+        ncwriteatt(ncfile,'/','summary',char('The data set consists of maps of total velocity of the surface current in the North-Western Tyrrhenian Sea and Ligurian Sea averaged over a time interval of 1 hour around the cardinal hour. Surface ocean velocities estimated by HF Radar are representative of the upper 0.3-2.5 meters of the ocean.'));
         ncwriteatt(ncfile,'/','source',char('coastal structure'));
-        ncwriteatt(ncfile,'/','network',char('HF Radar Surface Observation'));
-        ncwriteatt(ncfile,'/','keywords',char('OCEAN CURRENTS, SURFACE WATER, RADAR, SCR-HF'));
-        ncwriteatt(ncfile,'/','keywords_vocabulary',char('GCMD Science Keywords'));
-        ncwriteatt(ncfile,'/','history',char([time_coll ' data collected. ' dateCreated ' netCDF file created and sent to TAC']));
-        ncwriteatt(ncfile,'/','data_language',char('eng'));
-        ncwriteatt(ncfile,'/','data_character_set',char('utf8'));
-        ncwriteatt(ncfile,'/','topic_category',char('oceans'));
-        ncwriteatt(ncfile,'/','reference_system',char('EPSG:4806'));
-        ncwriteatt(ncfile,'/','metadata_language',char('eng'));
-        ncwriteatt(ncfile,'/','metadata_character_set',char('utf8'));
-        ncwriteatt(ncfile,'/','metadata_contact',char('lorenzo.corgnati@sp.ismar.cnr.it'));
-        ncwriteatt(ncfile,'/','metadata_date_stamp',char(dateCreated)); 
-        ncwriteatt(ncfile,'/','abstract',char('The data set consists of maps of total velocity of the surface current in the North-Western Tyrrhenian Sea and Ligurian Sea averaged over a time interval of 1 hour around the cardinal hour. Surface ocean velocities estimated by HF Radar are representative of the upper 0.3-2.5 meters of the ocean. Total velocities are derived using least square fit that maps radial velocities measured from individual sites onto a cartesian grid. The final product is a map of the horizontal components of the ocean currents on a regular grid in the area of overlap of two or more radar stations.'));
-        ncwriteatt(ncfile,'/','standard_name_vocabulary',char('NetCDF Climate and Forecast (CF) Metadata Convention Standard Name Table Version 1.6'));
-        ncwriteatt(ncfile,'/','id',char(dataID));
-        ncwriteatt(ncfile,'/','naming_authority',char('it.cnr.ismar'));
-        ncwriteatt(ncfile,'/','cdm_data_type',char('Grid'));
-        ncwriteatt(ncfile,'/','project',char('RITMARE and Jerico-Next'));
-        ncwriteatt(ncfile, '/','time_coverage_start',char(timeCoverageStart));
-        ncwriteatt(ncfile, '/','time_coverage_end',char(timeCoverageEnd));
-        ncwriteatt(ncfile, '/','time_coverage_duration',char('PT1H'));
-        ncwriteatt(ncfile, '/','time_coverage_resolution',char('PT1H'));
+        ncwriteatt(ncfile,'/','institution',char('National Research Council - Institute of Marine Science, S.S. Lerici'));
+        % Geo-spatial-temporal
         ncwriteatt(ncfile,'/','geospatial_lat_min',char(num2str(min(map_lat_lim))));
         ncwriteatt(ncfile,'/','geospatial_lat_max',char(num2str(max(map_lat_lim))));      
         ncwriteatt(ncfile,'/','geospatial_lon_min',char(num2str(min(map_lon_lim))));
         ncwriteatt(ncfile,'/','geospatial_lon_max',char(num2str(max(map_lon_lim))));
-        ncwriteatt(ncfile,'/','date_created',char(dateCreated));
-        ncwriteatt(ncfile,'/','processing_level',char('3B'));
-        ncwriteatt(ncfile,'/','license',char('HF radar sea surface current velocity dataset by CNR-ISMAR is licensed under a Creative Commons Attribution 4.0 International License. You should have received a copy of the license along with this work. If not, see http://creativecommons.org/licenses/by/4.0/.'));
-        ncwriteatt(ncfile,'/','creator_name',char('Lorenzo Corgnati'));
-        ncwriteatt(ncfile,'/','creator_url',char('http://radarhf.ismar.cnr.it'));
-        ncwriteatt(ncfile,'/','creator_email',char('lorenzo.corgnati@sp.ismar.cnr.it'));
-        ncwriteatt(ncfile,'/','acknowledgment',char('ISMAR HF Radar Network has been established within RITMARE and Jerico-Next projects. The network has been designed, implemented and managed through the efforts of ISMAR UOS La Spezia.'));
-        ncwriteatt(ncfile,'/','comment',char('Total velocities are derived using least square fit that maps radial velocities measured from individual sites onto a cartesian grid. The final product is a map of the horizontal components of the ocean currents on a regular grid in the area of overlap of two or more radar stations.'));
-        ncwriteatt(ncfile,'/','netcdf_version',char(netcdf.inqLibVers));
-        ncwriteatt(ncfile,'/','netcdf_format',char(ncfmt));
-        ncwriteatt(ncfile,'/','metadata_convention',char('Unidata Dataset Discovery v1.0 compliant. NOAA GNOME format compliant.'));
-        ncwriteatt(ncfile,'/','platform',char('CNR-ISMAR HF Radar Network'));
-        ncwriteatt(ncfile,'/','sensor',char('CODAR SeaSonde'));
-        ncwriteatt(ncfile,'/','date_modified',char(dateCreated));
-        ncwriteatt(ncfile,'/','grid_resolution',char('1.5 Km'));
-        ncwriteatt(ncfile,'/','grid_mapping',char('Transverse Mercator'));
-        ncwriteatt(ncfile,'/','citation',char(citation_str));        
-        ncwriteatt(ncfile,'/','institution_reference',char('http://www.ismar.cnr.it'));
-        ncwriteatt(ncfile,'/','operational_manager',char('Carlo Mantovani'));
-        ncwriteatt(ncfile,'/','operational_manager_email',char('carlo.mantovani@cnr.it'));
-        ncwriteatt(ncfile,'/','format_version',char('v1.0'));
-        ncwriteatt(ncfile,'/','data_mode',char('R'));
-        ncwriteatt(ncfile,'/','update_interval',char('void'));
-        ncwriteatt(ncfile,'/','site_code',char(''));
-        ncwriteatt(ncfile,'/','area',char('Mediterranean Sea'));
-        ncwriteatt(ncfile,'/','regional_description',char('North-Western Tyrrhenian Sea and Ligurian Sea, Italy'));
-        ncwriteatt(ncfile,'/','date_issued',char(dateCreated));
-        ncwriteatt(ncfile,'/','software_name',char('HFR_Combiner_TirLig'));
-        ncwriteatt(ncfile,'/','software_version',char('v2.1'));
-        ncwriteatt(ncfile,'/','quality_control',char('Level-B: Velocity Threshold + GDOP Threshold'));
-        ncwriteatt(ncfile,'/','file_quality_index',int32(0));
-        ncwriteatt(ncfile,'/','interpolation',char(''));
-        ncwriteatt(ncfile,'/','geospatial_lat_resolution',latRes(1));
-        ncwriteatt(ncfile,'/','geospatial_lon_resolution',lonRes(1));
-        ncwriteatt(ncfile,'/','geospatial_lat_units',char('degrees_north'));
-        ncwriteatt(ncfile,'/','geospatial_lon_units',char('degrees_east'));
-        ncwriteatt(ncfile,'/','geospatial_vertical_max', char('0'));
         ncwriteatt(ncfile,'/','geospatial_vertical_min', char('1'));
-        ncwriteatt(ncfile,'/','geospatial_vertical_positive', char('down'));
-        ncwriteatt(ncfile,'/','geospatial_vertical_resolution', char('1'));
-        ncwriteatt(ncfile,'/','geospatial_vertical_units', char('m'));
-        ncwriteatt(ncfile,'/','references',char('HFR_Progs Matlab Documentation - Copyright (C) 2006-7 David M. Kaplan; Otero,M. (2008).NETCDF DESCRIPTION FOR NEAR REAL-TIME SURFACE CURRENTS PRODUCED BY THE HF-RADAR NETWORK. https://cordc.ucsd.edu/projects/mapping/documents/HFRNet_RTV-NetCDF.pdf'));
+        ncwriteatt(ncfile,'/','geospatial_vertical_max', char('0'));
+        ncwriteatt(ncfile, '/','time_coverage_start',char(timeCoverageStart));
+        ncwriteatt(ncfile, '/','time_coverage_end',char(timeCoverageEnd));
+        % Conventions used
+        ncwriteatt(ncfile,'/','format_version',char('v2.0'));
+        ncwriteatt(ncfile,'/','Conventions',char('CF-1.6, Unidata, OceanSITES, ACDD, INSPIRE'));
+        % Publication information
+        ncwriteatt(ncfile,'/','update_interval',char('void'));
+        ncwriteatt(ncfile,'/','citation',char(citation_str));  
         ncwriteatt(ncfile,'/','publisher_name',char('Lorenzo Corgnati'));
         ncwriteatt(ncfile,'/','publisher_url',char('http://radarhf.ismar.cnr.it'));
         ncwriteatt(ncfile,'/','publisher_email',char('lorenzo.corgnati@sp.ismar.cnr.it'));
+        ncwriteatt(ncfile,'/','license',char('HF radar sea surface current velocity dataset by CNR-ISMAR is licensed under a Creative Commons Attribution 4.0 International License. You should have received a copy of the license along with this work. If not, see http://creativecommons.org/licenses/by/4.0/.'));
+        ncwriteatt(ncfile,'/','acknowledgment',char('ISMAR HF Radar Network has been established within RITMARE and Jerico-Next projects. The network has been designed, implemented and managed through the efforts of ISMAR S.S. Lerici.'));
+        % Provenance
+        ncwriteatt(ncfile,'/','date_created',char(dateCreated));      
+        ncwriteatt(ncfile,'/','history',char([time_coll ' data collected. ' dateCreated ' netCDF file created and sent to TAC']));
+        ncwriteatt(ncfile,'/','date_modified',char(dateCreated));
+        ncwriteatt(ncfile,'/','processing_level',char('3B'));
         ncwriteatt(ncfile,'/','contributor_name',char('Vega Forneris, Cristina Tronconi'));
         ncwriteatt(ncfile,'/','contributor_role',char('THREDDS expert, metadata expert'));
-      
+        ncwriteatt(ncfile,'/','contributor_email',char('vega.forneris@artov.isac.cnr.it, cristina.tronconi@artov.isac.cnr.it'));
+
+        % RECOMMENDED ATTRIBUTES
+        % Discovery and Identification        
+        ncwriteatt(ncfile,'/','naming_authority',char('it.cnr.ismar'));
+        ncwriteatt(ncfile,'/','id',char(dataID));
+        ncwriteatt(ncfile,'/','project',char('RITMARE and Jerico-Next'));
+        ncwriteatt(ncfile,'/','keywords',char('OCEAN CURRENTS, SURFACE WATER, RADAR, SCR-HF'));
+        ncwriteatt(ncfile,'/','keywords_vocabulary',char('GCMD Science Keywords'));
+        ncwriteatt(ncfile,'/','comment',char('Total velocities are derived using least square fit that maps radial velocities measured from individual sites onto a cartesian grid. The final product is a map of the horizontal components of the ocean currents on a regular grid in the area of overlap of two or more radar stations.'));
+        ncwriteatt(ncfile,'/','data_language',char('eng'));
+        ncwriteatt(ncfile,'/','data_character_set',char('utf8'));
+        ncwriteatt(ncfile,'/','metadata_language',char('eng'));
+        ncwriteatt(ncfile,'/','metadata_character_set',char('utf8'));
+        ncwriteatt(ncfile,'/','topic_category',char('oceans'));
+        ncwriteatt(ncfile,'/','network',char('ISMAR_HFR_TirLig'));
+        % Geo-spatial-temporal
+        ncwriteatt(ncfile,'/','area',char('Mediterranean Sea'));
+        ncwriteatt(ncfile,'/','geospatial_lat_units',char('degrees_north'));
+        ncwriteatt(ncfile,'/','geospatial_lon_units',char('degrees_east'));
+        ncwriteatt(ncfile,'/','geospatial_lat_resolution',latRes(1));
+        ncwriteatt(ncfile,'/','geospatial_lon_resolution',lonRes(1));
+        ncwriteatt(ncfile,'/','geospatial_vertical_positive', char('down'));
+        ncwriteatt(ncfile,'/','geospatial_vertical_units', char('m'));
+        ncwriteatt(ncfile,'/','geospatial_vertical_resolution', char('1')); 
+        ncwriteatt(ncfile, '/','time_coverage_duration',char('PT1H'));
+        ncwriteatt(ncfile, '/','time_coverage_resolution',char('PT1H'));
+        ncwriteatt(ncfile,'/','cdm_data_type',char('Grid'));
+        ncwriteatt(ncfile,'/','feature_type',char('surface'));
+        ncwriteatt(ncfile,'/','reference_system',char('EPSG:4806'));
+        % Conventions used
+        ncwriteatt(ncfile,'/','netcdf_version',char(netcdf.inqLibVers));
+        ncwriteatt(ncfile,'/','netcdf_format',char(ncfmt));
         
-%        ncwriteatt(ncfile,'/','summary',char('The data set consists of maps of total velocity of the surface current in the North-Western Tyrrhenian Sea and Ligurian Sea averaged over a time interval of 1 hour around the cardinal hour. Surface ocean velocities estimated by HF Radar are representative of the upper 0.3-2.5 meters of the ocean. The main objective of near real time processing is to produce the best product from available data at the time of processing. Total velocities are derived using least square fit that maps radial velocities measured from individual sites onto a cartesian grid. The final product is a map of the horizontal components of the ocean currents on a regular grid in the area of overlap of two or more radar stations.'));       
-        
-%        ncwriteatt(ncfile,'/','creation_date',char(creationDate));
-%        ncwriteatt(ncfile,'/','creation_time',char(creationTime));
+        % OTHER ATTRIBUTES    
+        ncwriteatt(ncfile,'/','metadata_contact',char('lorenzo.corgnati@sp.ismar.cnr.it'));
+        ncwriteatt(ncfile,'/','metadata_date_stamp',char(dateCreated)); 
+        ncwriteatt(ncfile,'/','abstract',char('The data set consists of maps of total velocity of the surface current in the North-Western Tyrrhenian Sea and Ligurian Sea averaged over a time interval of 1 hour around the cardinal hour. Surface ocean velocities estimated by HF Radar are representative of the upper 0.3-2.5 meters of the ocean. Total velocities are derived using least square fit that maps radial velocities measured from individual sites onto a cartesian grid. The final product is a map of the horizontal components of the ocean currents on a regular grid in the area of overlap of two or more radar stations.'));
+        ncwriteatt(ncfile,'/','standard_name_vocabulary',char('NetCDF Climate and Forecast (CF) Metadata Convention Standard Name Table Version 1.6'));     
+        ncwriteatt(ncfile,'/','creator_name',char('Lorenzo Corgnati'));
+        ncwriteatt(ncfile,'/','creator_url',char('http://radarhf.ismar.cnr.it'));
+        ncwriteatt(ncfile,'/','creator_email',char('lorenzo.corgnati@sp.ismar.cnr.it'));        
+        ncwriteatt(ncfile,'/','sensor',char('CODAR SeaSonde'));
+        ncwriteatt(ncfile,'/','grid_resolution',char('1.5 Km'));
+        ncwriteatt(ncfile,'/','grid_mapping',char('Transverse Mercator'));            
+        ncwriteatt(ncfile,'/','institution_reference',char('http://www.ismar.cnr.it'));
+        ncwriteatt(ncfile,'/','operational_manager',char('Carlo Mantovani'));
+        ncwriteatt(ncfile,'/','operational_manager_email',char('carlo.mantovani@cnr.it'));       
+        ncwriteatt(ncfile,'/','regional_description',char('North-Western Tyrrhenian Sea and Ligurian Sea, Italy'));
+        ncwriteatt(ncfile,'/','date_issued',char(dateCreated));
+        ncwriteatt(ncfile,'/','software_name',char('HFR_Combiner_TirLig'));
+        ncwriteatt(ncfile,'/','software_version',char('v3.0'));       
+        ncwriteatt(ncfile,'/','references',char('HFR_Progs Matlab Documentation - Copyright (C) 2006-7 David M. Kaplan; Otero,M. (2008).NETCDF DESCRIPTION FOR NEAR REAL-TIME SURFACE CURRENTS PRODUCED BY THE HF-RADAR NETWORK. https://cordc.ucsd.edu/projects/mapping/documents/HFRNet_RTV-NetCDF.pdf'));
         
     catch err
         display(['[' datestr(now) '] - - ' err.message]);

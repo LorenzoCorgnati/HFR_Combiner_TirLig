@@ -16,9 +16,9 @@
 %         overall: overall quality flag (good data value is assigned
 %                         if and only if all QC tests are passed
 %         varThr: Variance threshold quality flags
+%         tempDer: Temporal Derivative quality flags
 %         GDOPThr: GDOP threshold quality flags
 %         dataDens: Data Density quality flags
-%         radBal: Radial Balance quality flags
 %         velThr: Velocity threshold quality flags
 
 % Author: Lorenzo Corgnati
@@ -27,7 +27,7 @@
 % E-mail: lorenzo.corgnati@sp.ismar.cnr.it
 %%
 
-function [overall, varThr, GDOPThr, dataDens, radBal, velThr] = TotalQCtests_v10(mat_tot, Total_QC_params)
+function [overall, varThr, tempDer, GDOPThr, dataDens, velThr] = TotalQCtests_v10(mat_tot, Total_QC_params)
 
 display(['[' datestr(now) '] - - ' 'TotaQCtests_v10.m started.']);
 
@@ -47,6 +47,7 @@ end
 
 overall = netcdf.getConstant('NC_FILL_SHORT').*int16(ones(length(lonGrid),length(latGrid),1));
 varThr = netcdf.getConstant('NC_FILL_SHORT').*int16(ones(length(lonGrid),length(latGrid),1));
+tempDer = netcdf.getConstant('NC_FILL_SHORT').*int16(ones(length(lonGrid),length(latGrid),1));
 GDOPThr = netcdf.getConstant('NC_FILL_SHORT').*int16(ones(length(lonGrid),length(latGrid),1));
 dataDens = netcdf.getConstant('NC_FILL_SHORT').*int16(ones(length(lonGrid),length(latGrid),1,1));
 radBal = netcdf.getConstant('NC_FILL_SHORT').*int16(ones(length(lonGrid),length(latGrid),1));
@@ -101,6 +102,10 @@ if (TQC_err == 0)
                 end
             end
             
+            % Temporal Derivative quality flags
+            % TO BE DONE
+            tempDer = varThr; % to be removed
+            
             % Data Density Threshold quality flag
             if (not(isnan(numRads(i))))
                 if (numRads(i) < Total_QC_params.DataDensityThr)
@@ -123,7 +128,7 @@ end
 for ii=1:size(overall,1)
     for jj = 1:size(overall,2)
         if(velThr(ii,jj) ~= netcdf.getConstant('NC_FILL_SHORT'))
-            if((varThr(ii,jj) == 1) && (velThr(ii,jj) == 1) && (GDOPThr(ii,jj) == 1) && (dataDens(ii,jj) == 1) && (radBal(ii,jj) == 1))
+            if((varThr(ii,jj) == 1) && (tempDer(ii,jj) == 1) && (velThr(ii,jj) == 1) && (GDOPThr(ii,jj) == 1) && (dataDens(ii,jj) == 1))
                 overall(ii,jj) = 1;
             else
                 overall(ii,jj) = 4;
