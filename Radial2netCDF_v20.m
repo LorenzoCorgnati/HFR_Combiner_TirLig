@@ -90,7 +90,7 @@ try
         );
     clear r;
 catch err
-    display(['[' datestr(now) '] - - ' err.message]);
+    display(['[' datestr(now) '] - - ERROR in ' mfilename ' -> ' err.message]);
     R2C_err = 1;
 end
 
@@ -278,7 +278,7 @@ if (R2C_err == 0)
         % Time Stamp
         R.time = HFRP_RUV.TimeStamp;
     catch err
-        display(['[' datestr(now) '] - - ' err.message]);
+        display(['[' datestr(now) '] - - ERROR in ' mfilename ' -> ' err.message]);
         R2C_err = 1;
     end
     
@@ -291,7 +291,7 @@ if (R2C_err == 0)
         coverageEnd = addtodate(HFRP_RUV.TimeStamp, 30, 'minute');
         timeCoverageEnd = [datestr(coverageEnd, 'yyyy-mm-dd') 'T' datestr(coverageEnd, 'HH:MM:SS') 'Z'];
     catch err
-        display(['[' datestr(now) '] - - ' err.message]);
+        display(['[' datestr(now) '] - - ERROR in ' mfilename ' -> ' err.message]);
         R2C_err = 1;
     end
     
@@ -301,7 +301,7 @@ if (R2C_err == 0)
     try
         dateCreated = [datestr(now, 'yyyy-mm-dd') 'T' datestr(now, 'HH:MM:SS') 'Z'];
     catch err
-        display(['[' datestr(now) '] - - ' err.message]);
+        display(['[' datestr(now) '] - - ERROR in ' mfilename ' -> ' err.message]);
         R2C_err = 1;
     end
     
@@ -312,7 +312,7 @@ if (R2C_err == 0)
         timeref = datenum(1950,1,1);
         time_units = [datestr(timeref, 'yyyy-mm-dd') 'T' datestr(timeref, 'HH:MM:SS') 'Z'];
     catch err
-        display(['[' datestr(now) '] - - ' err.message]);
+        display(['[' datestr(now) '] - - ERROR in ' mfilename ' -> ' err.message]);
         R2C_err = 1;
     end
     
@@ -324,7 +324,7 @@ if (R2C_err == 0)
         ts = HFRP_RUV.TimeStamp;
         time_coll = [datestr(ts, 'yyyy-mm-dd') 'T' datestr(ts, 'HH:MM:SS') 'Z'];
     catch err
-        display(['[' datestr(now) '] - - ' err.message]);
+        display(['[' datestr(now) '] - - ERROR in ' mfilename ' -> ' err.message]);
         R2C_err = 1;
     end
     
@@ -366,7 +366,7 @@ if (R2C_err == 0)
         % plot(R.lond, R.latd, 'r.')
         % daspect([1.2 1 1])
     catch err
-        display(['[' datestr(now) '] - - ' err.message]);
+        display(['[' datestr(now) '] - - ERROR in ' mfilename ' -> ' err.message]);
         R2C_err = 1;
     end
     
@@ -383,7 +383,7 @@ if (R2C_err == 0)
         clear I;
         rb_map_idx = sub2ind(size(range), range_map_idx, bearing_map_idx);
     catch err
-        display(['[' datestr(now) '] - - ' err.message]);
+        display(['[' datestr(now) '] - - ERROR in ' mfilename ' -> ' err.message]);
         R2C_err = 1;
     end
     
@@ -477,13 +477,25 @@ if (R2C_err == 0)
         sprc = nan(size(range));
         sprc(rb_map_idx) = R.sprc;
     catch err
-        display(['[' datestr(now) '] - - ' err.message]);
+        display(['[' datestr(now) '] - - ERROR in ' mfilename ' -> ' err.message]);
         R2C_err = 1;
     end
     
     %%
     
     %% Perform QC tests
+    
+    % Build the names of the files of the previous two hours
+    [twoHoursBefore, oneHourBefore] = TimeStamp2TS(R.time);
+    twoHoursBefore_rep1 = strrep(ncfile_local,fileTime,twoHoursBefore);
+    Radial_QC_params.TempDerThr.hour2 = strrep(twoHoursBefore_rep1,fileTime(1:length(fileTime)-5),twoHoursBefore(1:length(twoHoursBefore)-5));
+    oneHoursBefore_rep1 = strrep(ncfile_local,fileTime,oneHourBefore);
+    Radial_QC_params.TempDerThr.hour1 = strrep(oneHoursBefore_rep1,fileTime(1:length(fileTime)-5),oneHourBefore(1:length(oneHourBefore)-5));
+    oneHoursBefore_rep1_rd = strrep(ncfile_rd,fileTime,oneHourBefore);
+    oneHoursBefore_rep2_rd = strrep(oneHoursBefore_rep1_rd,fileTime(1:length(fileTime)-5),oneHourBefore(1:length(oneHourBefore)-5));
+    oneHoursBefore_rep3_rd = strrep(oneHoursBefore_rep2_rd,fileTime(1:length(fileTime)-8),oneHourBefore(1:length(oneHourBefore)-8));
+    Radial_QC_params.TempDerThr.hour1_RD = strrep(oneHoursBefore_rep3_rd,fileTime(1:length(fileTime)-11),oneHourBefore(1:length(oneHourBefore)-11));
+        
     [overall_QCflag, overWater_QCflag, varianceThreshold_QCflag, temporalDerivativeThreshold_QCflag, velocityThreshold_QCflag, medianFilter_QCflag, averageRadialBearing_QC_flag, radialVelocityMedianFiltered, radialCount_QC_flag] = RadialQCtests_v10(bear, lond, latd, owtr, etmp, head, velo, Radial_QC_params, Site(1:4));
     
     %%
@@ -519,7 +531,7 @@ if (R2C_err == 0)
         xdst(isnan(xdst)) = netcdf.getConstant('NC_FILL_FLOAT');
         ydst(isnan(ydst)) = netcdf.getConstant('NC_FILL_FLOAT');
     catch err
-        display(['[' datestr(now) '] - - ' err.message]);
+        display(['[' datestr(now) '] - - ERROR in ' mfilename ' -> ' err.message]);
         R2C_err = 1;
     end
     
@@ -550,7 +562,7 @@ if (R2C_err == 0)
     try
         delete(ncfile_local);
     catch err
-        display(['[' datestr(now) '] - - ' err.message]);
+        display(['[' datestr(now) '] - - ERROR in ' mfilename ' -> ' err.message]);
         R2C_err = 1;
     end
     
@@ -945,7 +957,7 @@ if (R2C_err == 0)
         netcdf.putAtt(ncid, varid_vart, 'valid_range', int16( [0 9]));
         netcdf.putAtt(ncid, varid_vart, 'flag_values', int16( [0 1 2 3 4 7 8 9]));
         netcdf.putAtt(ncid, varid_vart, 'flag_meanings', 'unknown good_data probably_good_data potentially_correctable_bad_data bad_data nominal_value interpolated_value missing_value');
-        netcdf.putAtt(ncid, varid_vart, 'comment', ['OceanSITES quality flagging for Variance Threshold QC test. Test not applicable to Direction Finding systems. The Temporal Derivative test is applied. Threshold set to ' num2str(Radial_QC_params.TempDerThr) ' m/s.']);
+        netcdf.putAtt(ncid, varid_vart, 'comment', ['OceanSITES quality flagging for Variance Threshold QC test. Test not applicable to Direction Finding systems. The Temporal Derivative test is applied. Threshold set to ' num2str(Radial_QC_params.TempDerThr.threshold) ' m/s.']);
         netcdf.putAtt(ncid, varid_vart, 'FillValue', netcdf.getConstant('NC_FILL_SHORT'));
         netcdf.putAtt(ncid, varid_vart, 'scale_factor', int16(1));
         netcdf.putAtt(ncid, varid_vart, 'add_offset', int16(0));
@@ -967,13 +979,18 @@ if (R2C_err == 0)
         netcdf.putAtt(ncid, varid_cspd, 'coordinates', 'LONGITUDE LATITUDE');
         
         % Average Radial Bearing QC Flag
+        for aRB_idx=1:length(Radial_QC_params.AvgRadBear.site)
+            if(strcmp(Radial_QC_params.AvgRadBear.site(aRB_idx).code, Site(1:4)))
+                aRB_range = Radial_QC_params.AvgRadBear.site(aRB_idx).range;
+            end
+        end
         varid_avrb = netcdf.defVar(ncid, 'AVRB_QC', 'short', dimid_t);
         netcdf.defVarDeflate(ncid, varid_avrb, true, true, 6);
         netcdf.putAtt(ncid, varid_avrb, 'long_name', 'Average Radial Bearing Quality Flag');
         netcdf.putAtt(ncid, varid_avrb, 'valid_range', int16( [0 9]));
         netcdf.putAtt(ncid, varid_avrb, 'flag_values', int16( [0 1 2 3 4 7 8 9]));
         netcdf.putAtt(ncid, varid_avrb, 'flag_meanings', 'unknown good_data probably_good_data potentially_correctable_bad_data bad_data nominal_value interpolated_value missing_value');
-        netcdf.putAtt(ncid, varid_avrb, 'comment', ['OceanSITES quality flagging for Average Radial Bearing QC test. Thresholds set to [' num2str(Radial_QC_params.AvgRadBear(1)) '-' num2str(Radial_QC_params.AvgRadBear(2)) '] deg.']);
+        netcdf.putAtt(ncid, varid_avrb, 'comment', ['OceanSITES quality flagging for Average Radial Bearing QC test. Thresholds set to [' num2str(aRB_range(1)) '-' num2str(aRB_range(2)) '] deg.']);
         netcdf.putAtt(ncid, varid_avrb, 'FillValue', netcdf.getConstant('NC_FILL_SHORT'));
         netcdf.putAtt(ncid, varid_avrb, 'scale_factor', int16(1));
         netcdf.putAtt(ncid, varid_avrb, 'add_offset', int16(0));
@@ -1395,7 +1412,7 @@ if (R2C_err == 0)
         %% Close file
         netcdf.close( ncid );
     catch err
-        display(['[' datestr(now) '] - - ' err.message]);
+        display(['[' datestr(now) '] - - ERROR in ' mfilename ' -> ' err.message]);
         R2C_err = 1;
     end
     %%
@@ -1406,7 +1423,7 @@ if (R2C_err == 0)
         try
             [cp_status] = copyfile(ncfile_local,ncfile_tds,'f');
         catch err
-            display(['[' datestr(now) '] - - ' err.message]);
+            display(['[' datestr(now) '] - - ERROR in ' mfilename ' -> ' err.message]);
             R2C_err = 1;
         end
     end
@@ -1416,7 +1433,7 @@ if (R2C_err == 0)
         try
             [cp_status] = copyfile(ncfile_local,ncfile_rd,'f');
         catch err
-            display(['[' datestr(now) '] - - ' err.message]);
+            display(['[' datestr(now) '] - - ERROR in ' mfilename ' -> ' err.message]);
             R2C_err = 1;
         end
     end

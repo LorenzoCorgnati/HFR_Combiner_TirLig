@@ -142,8 +142,8 @@ var_thr_R = textscan(char(param_file(52)), '%f');
 var_thr_R = var_thr_R{1}';
 
 % Temporal Derivative Threshold
-temp_der_thr_R = textscan(char(param_file(54)), '%f');
-temp_der_thr_R = temp_der_thr_R{1}';
+temp_der_thr_str_R = textscan(char(param_file(54)), '%f');
+temp_der_thr_R.threshold = temp_der_thr_str_R{1}';
 
 % Velocity Threshold
 maxspd_R = textscan(char(param_file(56)), '%f');
@@ -176,8 +176,8 @@ var_thr_T = textscan(char(param_file(68)), '%f');
 var_thr_T = var_thr_T{1}';
 
 % Temporal Derivative Threshold
-temp_der_thr_T = textscan(char(param_file(70)), '%f');
-temp_der_thr_T = temp_der_thr_T{1}';
+temp_der_thr_str_T = textscan(char(param_file(70)), '%f');
+temp_der_thr_T.threshold = temp_der_thr_str_T{1}';
 
 % Data Density Threshold
 dataDens_T = textscan(char(param_file(72)), '%f');
@@ -232,7 +232,7 @@ for rs=3:length(src_dir)
 end
 if (RadStruct_flag ==1)
     try
-        load(strcat(src_folder, 'RadStruct.mat'));
+        load(strcat(sr_folder, 'RadStruct.mat'));
         display(['[' datestr(now) '] - - ' 'RadStruct successfully loaded.']);
     catch err
         % Search for the last non-corrupted incremental copy of RadStruct.mat
@@ -254,7 +254,7 @@ if (RadStruct_flag ==1)
                 incr_err = 0;
             catch err
                 icr = icr - 1;
-                display(['[' datestr(now) '] - - ' err.message]);
+                display(['[' datestr(now) '] - - ERROR in ' mfilename ' -> ' err.message]);
             end
         end
     end

@@ -64,22 +64,22 @@ try
     latGrid = unique(mat_tot.LonLat(:,2));
     depth = 0;
 catch err
-    display(['[' datestr(now) '] - - ' err.message]);
+    display(['[' datestr(now) '] - - ERROR in ' mfilename ' -> ' err.message]);
     T2C_err = 1;
 end
 
 if (T2C_err == 0)
     % Prepare variables
    
-    U_grid = netcdf.getConstant('NC_FILL_DOUBLE').*ones(length(lonGrid),length(latGrid),1);
-    V_grid = netcdf.getConstant('NC_FILL_DOUBLE').*ones(length(lonGrid),length(latGrid),1);
+    mat_tot.U_grid = netcdf.getConstant('NC_FILL_DOUBLE').*ones(length(lonGrid),length(latGrid),1);
+    mat_tot.V_grid = netcdf.getConstant('NC_FILL_DOUBLE').*ones(length(lonGrid),length(latGrid),1);
     
-    U_std = netcdf.getConstant('NC_FILL_DOUBLE').*ones(length(lonGrid),length(latGrid),1);
-    V_std = netcdf.getConstant('NC_FILL_DOUBLE').*ones(length(lonGrid),length(latGrid),1);
+    mat_tot.U_std = netcdf.getConstant('NC_FILL_DOUBLE').*ones(length(lonGrid),length(latGrid),1);
+    mat_tot.V_std = netcdf.getConstant('NC_FILL_DOUBLE').*ones(length(lonGrid),length(latGrid),1);
     
-    covariance = netcdf.getConstant('NC_FILL_DOUBLE').*ones(length(lonGrid),length(latGrid),1);
+    mat_tot.covariance = netcdf.getConstant('NC_FILL_DOUBLE').*ones(length(lonGrid),length(latGrid),1);
     
-    GDOP = netcdf.getConstant('NC_FILL_DOUBLE').*ones(length(lonGrid),length(latGrid),1);
+    mat_tot.GDOP = netcdf.getConstant('NC_FILL_DOUBLE').*ones(length(lonGrid),length(latGrid),1);
     
 end
 
@@ -91,29 +91,29 @@ if (T2C_err == 0)
             latGrid_idx = find(latGrid==mat_tot.LonLat(i,2));
             % U and V components of current velocity
             if (not(isnan(mat_tot.U(i))))
-                U_grid(lonGrid_idx,latGrid_idx,1) = mat_tot.U(i)*0.01;
+                mat_tot.U_grid(lonGrid_idx,latGrid_idx,1) = mat_tot.U(i)*0.01;
             end
             if (not(isnan(mat_tot.V(i))))
-                V_grid(lonGrid_idx,latGrid_idx,1) = mat_tot.V(i)*0.01;
+                mat_tot.V_grid(lonGrid_idx,latGrid_idx,1) = mat_tot.V(i)*0.01;
             end
             % U and V standard errors
             if (not(isnan(mat_tot.ErrorEstimates(1,1).Uerr(i))))
-                U_std(lonGrid_idx,latGrid_idx,1) = sqrt(mat_tot.ErrorEstimates(1,1).Uerr(i))*0.01;
+                mat_tot.U_std(lonGrid_idx,latGrid_idx,1) = sqrt(mat_tot.ErrorEstimates(1,1).Uerr(i))*0.01;
             end
             if (not(isnan(mat_tot.ErrorEstimates(1,1).Verr(i))))
-                V_std(lonGrid_idx,latGrid_idx,1) = sqrt(mat_tot.ErrorEstimates(1,1).Verr(i))*0.01;
+                mat_tot.V_std(lonGrid_idx,latGrid_idx,1) = sqrt(mat_tot.ErrorEstimates(1,1).Verr(i))*0.01;
             end
             % UV covariance
             if (not(isnan(mat_tot.ErrorEstimates(1,1).UVCovariance(i))))
-                covariance(lonGrid_idx,latGrid_idx,1) = mat_tot.ErrorEstimates(1,1).UVCovariance(i)*0.0001;
+                mat_tot.covariance(lonGrid_idx,latGrid_idx,1) = mat_tot.ErrorEstimates(1,1).UVCovariance(i)*0.0001;
             end
             % GDOP
             if (not(isnan(mat_tot.ErrorEstimates(1,1).TotalErrors(i))))
-                GDOP(lonGrid_idx,latGrid_idx,1) = mat_tot.ErrorEstimates(1,1).TotalErrors(i);
+                mat_tot.GDOP(lonGrid_idx,latGrid_idx,1) = mat_tot.ErrorEstimates(1,1).TotalErrors(i);
             end
         end
     catch err
-        display(['[' datestr(now) '] - - ' err.message]);
+        display(['[' datestr(now) '] - - ERROR in ' mfilename ' -> ' err.message]);
         T2C_err = 1;
     end
 end
@@ -130,7 +130,7 @@ if (T2C_err == 0)
         maxSite_dim = 50;
         string15_dim = 15;
     catch err
-        display(['[' datestr(now) '] - - ' err.message]);
+        display(['[' datestr(now) '] - - ERROR in ' mfilename ' -> ' err.message]);
         T2C_err = 1;
     end
 end
@@ -167,7 +167,7 @@ if (T2C_err == 0)
         creation = datevec(mat_tot.TimeStamp-1/24);
         startDate = [num2str(creation(1)) '-' num2str(creation(2)) '-' num2str(creation(3))];
     catch err
-        display(['[' datestr(now) '] - - ' err.message]);
+        display(['[' datestr(now) '] - - ERROR in ' mfilename ' -> ' err.message]);
         T2C = 1;
     end
 end
@@ -186,7 +186,7 @@ if (T2C_err == 0)
         latRes = diff(latGrid);
         lonRes = diff(lonGrid);
     catch err
-        display(['[' datestr(now) '] - - ' err.message]);
+        display(['[' datestr(now) '] - - ERROR in ' mfilename ' -> ' err.message]);
         T2C = 1;
     end
 end
@@ -201,7 +201,7 @@ if (T2C_err == 0)
         servRD_ncfile = [servRD_nc_tot 'TOTL_' time_str '.nc'];
         citation_str = ['Data collected and processed by CNR-ISMAR within RITMARE and Jerico-Next projects -  Year ' num2str(ts(1,1))];
     catch err
-        display(['[' datestr(now) '] - - ' err.message]);
+        display(['[' datestr(now) '] - - ERROR in ' mfilename ' -> ' err.message]);
         T2C_err = 1;
     end
 end
@@ -219,7 +219,7 @@ dataID = ['TirLig_' strrep(time_str(1:10), '_', '-') '_' time_str(12:13) 'Z'];
 try
     delete(ncfile);
 catch err
-    display(['[' datestr(now) '] - - ' err.message]);
+    display(['[' datestr(now) '] - - ERROR in ' mfilename ' -> ' err.message]);
     T2C_err = 1;
 end
 
@@ -229,6 +229,18 @@ procParamsVec = [single(Total_QC_params.GDOPThr), single(Total_QC_params.VelThr/
 %%
 
 %% Perform QC tests
+
+% Build the names of the files of the previous two hours
+[twoHoursBefore, oneHourBefore] = TimeStamp2TS(mat_tot.TimeStamp);
+twoHoursBefore_rep1 = strrep(ncfile,time_str,twoHoursBefore);
+Total_QC_params.TempDerThr.hour2 = strrep(twoHoursBefore_rep1,time_str(1:length(time_str)-5),twoHoursBefore(1:length(twoHoursBefore)-5));
+oneHoursBefore_rep1 = strrep(ncfile,time_str,oneHourBefore);
+Total_QC_params.TempDerThr.hour1 = strrep(oneHoursBefore_rep1,time_str(1:length(time_str)-5),oneHourBefore(1:length(oneHourBefore)-5));
+oneHoursBefore_rep1_rd = strrep(servRD_ncfile,time_str,oneHourBefore);
+oneHoursBefore_rep2_rd = strrep(oneHoursBefore_rep1_rd,time_str(1:length(time_str)-5),oneHourBefore(1:length(oneHourBefore)-5));
+oneHoursBefore_rep3_rd = strrep(oneHoursBefore_rep2_rd,time_str(1:length(time_str)-8),oneHourBefore(1:length(oneHourBefore)-8));
+Total_QC_params.TempDerThr.hour1_RD = strrep(oneHoursBefore_rep3_rd,time_str(1:length(time_str)-11),oneHourBefore(1:length(oneHourBefore)-11));
+
 [overall_QCflag, varianceThreshold_QCflag, temporalDerivativeThreshold_QCflag, GDOP_QCflag, dataDensity_QCflag, velocityThreshold_QCflag] = TotalQCtests_v10(mat_tot, Total_QC_params);
 
 %%
@@ -480,7 +492,7 @@ if (T2C_err == 0)
         ncwriteatt(ncfile,'VART_QC','flag_meanings',char('unknown good_data probably_good_data potentially_correctable_bad_data bad_data nominal_value interpolated_value missing_value'));
         ncwriteatt(ncfile,'VART_QC','comment',char(['OceanSITES quality flagging for variance threshold QC test. ' ...
             'Test not applicable to Direction Finding systems. The Temporal Derivative test is applied.' ...
-            'Threshold set to ' num2str(Total_QC_params.TempDerThr) ' m/s. ']));
+            'Threshold set to ' num2str(Total_QC_params.TempDerThr.threshold) ' m/s. ']));
         ncwriteatt(ncfile,'VART_QC','scale_factor',int16(1));
         ncwriteatt(ncfile,'VART_QC','add_offset',int16(0));
         
@@ -582,12 +594,12 @@ if (T2C_err == 0)
         ncwrite(ncfile,'LATITUDE',latGrid);
         ncwrite(ncfile,'LONGITUDE',lonGrid);
         ncwrite(ncfile,'DEPH',depth);
-        ncwrite(ncfile,'EWCT',U_grid);
-        ncwrite(ncfile,'NSCT',V_grid);
-        ncwrite(ncfile,'EWCS',U_std);
-        ncwrite(ncfile,'NSCS',V_std);
-        ncwrite(ncfile,'CCOV',covariance);
-        ncwrite(ncfile,'GDOP',GDOP);
+        ncwrite(ncfile,'EWCT',mat_tot.U_grid);
+        ncwrite(ncfile,'NSCT',mat_tot.V_grid);
+        ncwrite(ncfile,'EWCS',mat_tot.U_std);
+        ncwrite(ncfile,'NSCS',mat_tot.V_std);
+        ncwrite(ncfile,'CCOV',mat_tot.covariance);
+        ncwrite(ncfile,'GDOP',mat_tot.GDOP);
         ncwrite(ncfile,'NARX',length(sitesLat));
         ncwrite(ncfile,'NATX',length(sitesLat));       
         ncwrite(ncfile,'SLTR',sitesLat');
@@ -701,7 +713,7 @@ if (T2C_err == 0)
         ncwriteatt(ncfile,'/','references',char('HFR_Progs Matlab Documentation - Copyright (C) 2006-7 David M. Kaplan; Otero,M. (2008).NETCDF DESCRIPTION FOR NEAR REAL-TIME SURFACE CURRENTS PRODUCED BY THE HF-RADAR NETWORK. https://cordc.ucsd.edu/projects/mapping/documents/HFRNet_RTV-NetCDF.pdf'));
         
     catch err
-        display(['[' datestr(now) '] - - ' err.message]);
+        display(['[' datestr(now) '] - - ERROR in ' mfilename ' -> ' err.message]);
         T2C_err = 1;
     end
 end
@@ -711,7 +723,7 @@ if (T2C_err == 0)
     try
         [cp_status] = copyfile(ncfile,servTH_ncfile,'f');
     catch err
-        display(['[' datestr(now) '] - - ' err.message]);
+        display(['[' datestr(now) '] - - ERROR in ' mfilename ' -> ' err.message]);
         T2C_err = 1;
     end
 end
@@ -721,7 +733,7 @@ if (T2C_err == 0)
     try
         [cp_status] = copyfile(ncfile,servRD_ncfile,'f');
     catch err
-        display(['[' datestr(now) '] - - ' err.message]);
+        display(['[' datestr(now) '] - - ERROR in ' mfilename ' -> ' err.message]);
         T2C_err = 1;
     end
 end

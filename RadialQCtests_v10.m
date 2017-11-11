@@ -80,6 +80,16 @@ radVelMedianFiltered = radVel;
 % Radial Count QC test
 radVectors = sum(sum(~isnan(radVel)));
 
+% Temporal Derivative QC test
+tempDer_Thr = Radial_QC_params.TempDerThr.threshold;
+
+% Check if the files of the previous two hours exist
+if ((exist(Radial_QC_params.TempDerThr.hour2) == 2) && (exist(Radial_QC_params.TempDerThr.hour1) == 2))
+    tD_go = true;
+else
+    tD_go = false;
+end
+
 %%
 
 %% Populate QC variables
@@ -98,9 +108,33 @@ if (RQC_err == 0)
         varThr((varVec <= Radial_QC_params.VarThr)) = 1;
         
         % Temporal Derivative quality flags
-        % TO BE DONE
-        tempDer = varThr; % to be removed
-        
+        if (tD_go)
+            tempDer1h = tempDer;
+            % Extract the radial velocity fields from the previous two hours files
+            radVel1h = ncread(Radial_QC_params.TempDerThr.hour1,'RDVA');
+            radVel2h = ncread(Radial_QC_params.TempDerThr.hour2,'RDVA');
+            for rVr=1:size(radVel,1)
+                for rVc=1:size(radVel,2)
+                    if (radVel1h(rVr, rVc) ~= netcdf.getConstant('NC_FILL_FLOAT'))
+                        if ((isnan(radVel(rVr,rVc))) || (radVel2h(rVr,rVc) == netcdf.getConstant('NC_FILL_FLOAT')))
+                            tempDer1h(rVr,rVc) = 1;
+                        elseif ((abs(radVel(rVr,rVc) - radVel1h(rVr,rVc)) < tempDer_Thr) && (abs(radVel2h(rVr,rVc) - radVel1h(rVr,rVc)) < tempDer_Thr))
+                            tempDer1h(rVr,rVc) = 1;
+                        else
+                            tempDer1h(rVr,rVc) = 4;
+                        end
+                    end
+                end
+            end
+
+            % Modify the VART_QC variable of the nc file of the previous
+            % hour (both locally and on RadarDisk)
+            ncwrite(Radial_QC_params.TempDerThr.hour1,'VART_QC',tempDer1h);
+            ncwrite(Radial_QC_params.TempDerThr.hour1_RD,'VART_QC',tempDer1h);
+        end
+        % Set the QC flag for the current hour to 0 (no QC performed)
+        tempDer(~isnan(radVel)) = 0;
+                
         % Average Radial Bearing quality flag
         if ((avgBear >= aRB_range(1)) && (avgBear <= aRB_range(2)))
             avgRadBear = 1;
@@ -206,7 +240,7 @@ if (RQC_err == 0)
         end
         
     catch err
-        display(['[' datestr(now) '] - - ' err.message]);
+        display(['[' datestr(now) '] - - ERROR in ' mfilename ' -> ' err.message]);
         RQC_err = 1;
     end
 end

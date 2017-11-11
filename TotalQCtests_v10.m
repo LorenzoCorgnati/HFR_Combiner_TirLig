@@ -41,7 +41,7 @@ try
     latGrid = unique(mat_tot.LonLat(:,2));
     depth = 0;
 catch err
-    display(['[' datestr(now) '] - - ' err.message]);
+    display(['[' datestr(now) '] - - ERROR in ' mfilename ' -> ' err.message]);
     TQC_err = 1;
 end
 
@@ -50,7 +50,6 @@ varThr = netcdf.getConstant('NC_FILL_SHORT').*int16(ones(length(lonGrid),length(
 tempDer = netcdf.getConstant('NC_FILL_SHORT').*int16(ones(length(lonGrid),length(latGrid),1));
 GDOPThr = netcdf.getConstant('NC_FILL_SHORT').*int16(ones(length(lonGrid),length(latGrid),1));
 dataDens = netcdf.getConstant('NC_FILL_SHORT').*int16(ones(length(lonGrid),length(latGrid),1,1));
-radBal = netcdf.getConstant('NC_FILL_SHORT').*int16(ones(length(lonGrid),length(latGrid),1));
 velThr = netcdf.getConstant('NC_FILL_SHORT').*int16(ones(length(lonGrid),length(latGrid),1));
 
 %%
@@ -69,6 +68,15 @@ I(isnan(mat_tot.U)) = NaN; % exclude grid points where no velocity data is prese
 % Data Density Threshold
 numRads = mat_tot.OtherMatrixVars.makeTotals_TotalsNumRads;
 numRads(isnan(mat_tot.U)) = NaN; % exclude grid points where no velocity data is present
+
+% Temporal Derivative QC test
+tempDer_Thr = Total_QC_params.TempDerThr.threshold;
+% Check if the files of the previous two hours exist
+if ((exist(Total_QC_params.TempDerThr.hour2) == 2) && (exist(Total_QC_params.TempDerThr.hour1) == 2))
+    tD_go = true;
+else
+    tD_go = false;
+end
 
 %%
 
@@ -102,10 +110,6 @@ if (TQC_err == 0)
                 end
             end
             
-            % Temporal Derivative quality flags
-            % TO BE DONE
-            tempDer = varThr; % to be removed
-            
             % Data Density Threshold quality flag
             if (not(isnan(numRads(i))))
                 if (numRads(i) < Total_QC_params.DataDensityThr)
@@ -115,8 +119,43 @@ if (TQC_err == 0)
                 end
             end
         end
+        
+        % Temporal Derivative quality flags
+        if (tD_go)
+            tempDer1h = tempDer;
+            % Extract the U and V velocity fields from the previous two hours files
+            totU1h = ncread(Total_QC_params.TempDerThr.hour1,'EWCT');
+            totV1h = ncread(Total_QC_params.TempDerThr.hour1,'NSCT');
+            totU2h = ncread(Total_QC_params.TempDerThr.hour2,'EWCT');
+            totV2h = ncread(Total_QC_params.TempDerThr.hour2,'NSCT');
+            % Evaluate total velocities
+            totVel = sqrt(((mat_tot.U_grid).^2) + ((mat_tot.V_grid).^2));
+            totVel(find(mat_tot.U_grid==netcdf.getConstant('NC_FILL_FLOAT'))) = NaN;
+            totVel1h = sqrt(((totU1h).^2) + ((totV1h).^2));
+            totVel2h = sqrt(((totU2h).^2) + ((totV2h).^2));
+            for tVr=1:size(totVel,1)
+                for tVc=1:size(totVel,2)
+                    if (~isnan(totVel1h(tVr,tVc)))
+                        if ((isnan(totVel(tVr,tVc))) || (isnan(totVel2h(tVr,tVc))))
+                            tempDer1h(tVr,tVc) = 1;
+                        elseif ((abs(totVel(tVr,tVc) - totVel1h(tVr,tVc)) < tempDer_Thr) && (abs(totVel2h(tVr,tVc) - totVel1h(tVr,tVc)) < tempDer_Thr))
+                            tempDer1h(tVr,tVc) = 1;
+                        else
+                            tempDer1h(tVr,tVc) = 4;
+                        end
+                    end
+                end
+            end
+            
+            % Modify the VART_QC variable of the nc file of the previous
+            % hour (both locally and on RadarDisk)
+            ncwrite(Total_QC_params.TempDerThr.hour1,'VART_QC',tempDer1h);
+            ncwrite(Total_QC_params.TempDerThr.hour1_RD,'VART_QC',tempDer1h);
+        end
+        % Set the QC flag for the current hour to 0 (no QC performed)
+        tempDer(find(mat_tot.U_grid ~= netcdf.getConstant('NC_FILL_FLOAT'))) = 0;
     catch err
-        display(['[' datestr(now) '] - - ' err.message]);
+        display(['[' datestr(now) '] - - ERROR in ' mfilename ' -> ' err.message]);
         TQC_err = 1;
     end
 end

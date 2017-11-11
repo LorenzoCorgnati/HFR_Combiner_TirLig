@@ -42,7 +42,7 @@ try
     display(['[' datestr(now) '] - - ' 'loadRDLfile loading ...']);
     RADIAL = loadRDLFile(ruv_files, 'false', 'warning');
 catch err
-    display(['[' datestr(now) '] - - ' err.message]);
+    display(['[' datestr(now) '] - - ERROR in ' mfilename ' -> ' err.message]);
     sT_err = 1;
 end
 
@@ -148,7 +148,7 @@ if (sT_err == 0)
         display(['[' datestr(now) '] - - ' 'makeTotals combining ...']);
         [TUV,R] = makeTotals(RADIAL, 'Grid', Grid, 'TimeStamp', TS, 'spatthresh', spatthresh, 'tempthresh', 1/24);
     catch err
-        display(['[' datestr(now) '] - - ' err.message]);
+        display(['[' datestr(now) '] - - ERROR in ' mfilename ' -> ' err.message]);
         sT_err = 1;
     end
 end
@@ -238,7 +238,7 @@ if (sT_err == 0)
             [cp_status] = copyfile((strcat([dest_tuvs dayFolder '/'], sprintf('%s.mat', when))),(strcat([dest_serv_tuvs dayFolder '/'], sprintf('%s.mat', when))),'f');
             display(['[' datestr(now) '] - - ' when ' mat file successfully saved on RadarDisk.']);
         catch err
-            display(['[' datestr(now) '] - - ' err.message]);
+            display(['[' datestr(now) '] - - ERROR in ' mfilename ' -> ' err.message]);
             sT_err = 1;
         end
         
@@ -275,7 +275,7 @@ if (sT_err == 0)
             print(strcat(local_maps, sprintf('%s.jpeg', when)),'-djpeg');
             display(['[' datestr(now) '] - - ' when ' map successfully saved locally.']);
         catch err
-            display(['[' datestr(now) '] - - ' err.message]);
+            display(['[' datestr(now) '] - - ERROR in ' mfilename ' -> ' err.message]);
             sT_err = 1;
         end
         
@@ -283,7 +283,7 @@ if (sT_err == 0)
             print(strcat(local_maps, sprintf('%s.jpeg', when)),'-djpeg');
             sT_err = 0;
         catch err
-            display(['[' datestr(now) '] - - ' err.message]);
+            display(['[' datestr(now) '] - - ERROR in ' mfilename ' -> ' err.message]);
             sT_err = 1;
         end
         
@@ -291,7 +291,7 @@ if (sT_err == 0)
             [cp_status] = copyfile(strcat(local_maps, sprintf('%s.jpeg', when)),strcat(dest_maps, sprintf('%s.jpeg', when)),'f');
             display(['[' datestr(now) '] - - ' when ' map successfully saved on RadarDisk.']);
         catch err
-            display(['[' datestr(now) '] - - ' err.message]);
+            display(['[' datestr(now) '] - - ERROR in ' mfilename ' -> ' err.message]);
             sT_err = 1;
         end
         
@@ -300,7 +300,7 @@ if (sT_err == 0)
             [cp_status] = copyfile(strcat(local_maps, sprintf('%s.jpeg', when)),strcat(serv_maps, sprintf('%s.jpeg', when)),'f');
             display(['[' datestr(now) '] - - ' when ' map successfully saved on web server.']);
         catch err
-            display(['[' datestr(now) '] - - ' err.message]);
+            display(['[' datestr(now) '] - - ERROR in ' mfilename ' -> ' err.message]);
             sT_err = 1;
         end
         close;
