@@ -34,7 +34,6 @@
 %         sitesCodes: codes of the contributing radar sites.
 %         mask: masking map (not used).
 %         dest_nc_tot : destination folder where to save the netCDF file
-%         servTH_nc_tot: THREDDS server address.
 %         servRD_nc_tot: ISMAR SP disk address.
 %         lastPatternStr: string containing the last pattern measurement date
 
@@ -48,7 +47,7 @@
 % E-mail: lorenzo.corgnati@sp.ismar.cnr.it
 %%
 
-function [T2C_err] = Total2netCDF_v30(mat_tot, grid, map_lon_lim, map_lat_lim, search_radius, Total_QC_params, sitesLat, sitesLon, sitesCodes, mask, dest_nc_tot, servTH_nc_tot, servRD_nc_tot, lastPatternStr)
+function [T2C_err] = Total2netCDF_v30(mat_tot, grid, map_lon_lim, map_lat_lim, search_radius, Total_QC_params, sitesLat, sitesLon, sitesCodes, mask, dest_nc_tot, servRD_nc_tot, lastPatternStr)
 
 display(['[' datestr(now) '] - - ' 'Total2netCDF_v30.m started.']);
 
@@ -197,7 +196,6 @@ if (T2C_err == 0)
         ts = datevec(mat_tot.TimeStamp);
         time_str = sprintf('%.4d_%.2d_%.2d_%.2d%.2d',ts(1,1),ts(1,2),ts(1,3),ts(1,4),ts(1,5));
         ncfile = [dest_nc_tot 'TOTL_' time_str '.nc'];
-        servTH_ncfile = [servTH_nc_tot 'TOTL_' time_str '.nc'];
         servRD_ncfile = [servRD_nc_tot 'TOTL_' time_str '.nc'];
         citation_str = ['Data collected and processed by CNR-ISMAR within RITMARE and Jerico-Next projects -  Year ' num2str(ts(1,1))];
     catch err
@@ -718,17 +716,7 @@ if (T2C_err == 0)
     end
 end
 
-% Copies the netCDF file to the THREDDS server
-if (T2C_err == 0)
-    try
-        [cp_status] = copyfile(ncfile,servTH_ncfile,'f');
-    catch err
-        display(['[' datestr(now) '] - - ERROR in ' mfilename ' -> ' err.message]);
-        T2C_err = 1;
-    end
-end
-
-% Copies the netCDF file to the RadarDisk
+% Copy the netCDF file to the RadarDisk
 if (T2C_err == 0)
     try
         [cp_status] = copyfile(ncfile,servRD_ncfile,'f');

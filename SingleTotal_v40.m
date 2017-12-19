@@ -93,26 +93,45 @@ if (sT_err == 0)
         servTH_dest_rad = [serv_netcdf 'TirLig/Radials/v1.0/'];
         servRD_dest_rad = [dest_serv_tuvs(1:length(dest_serv_tuvs)-12) 'Radials/netCDF/'];
         
-        if (exist([servRD_dest_rad RADIAL(rd_idx,1).SiteName '/' yearFolder], 'dir') ~= 7)
-            mkdir([servRD_dest_rad RADIAL(rd_idx,1).SiteName '/' yearFolder]);
+        % Version 1.0
+        if (exist([servRD_dest_rad 'v1.0/' RADIAL(rd_idx,1).SiteName '/' yearFolder], 'dir') ~= 7)
+            mkdir([servRD_dest_rad 'v1.0/' RADIAL(rd_idx,1).SiteName '/' yearFolder]);
         end
-        if (exist([servRD_dest_rad RADIAL(rd_idx,1).SiteName '/' monthFolder], 'dir') ~= 7)
-            mkdir([servRD_dest_rad RADIAL(rd_idx,1).SiteName '/' monthFolder]);
+        if (exist([servRD_dest_rad 'v1.0/' RADIAL(rd_idx,1).SiteName '/' monthFolder], 'dir') ~= 7)
+            mkdir([servRD_dest_rad 'v1.0/' RADIAL(rd_idx,1).SiteName '/' monthFolder]);
         end
-        if (exist([servRD_dest_rad RADIAL(rd_idx,1).SiteName '/' dayFolder], 'dir') ~= 7)
-            mkdir([servRD_dest_rad RADIAL(rd_idx,1).SiteName '/' dayFolder]);
+        if (exist([servRD_dest_rad 'v1.0/' RADIAL(rd_idx,1).SiteName '/' dayFolder], 'dir') ~= 7)
+            mkdir([servRD_dest_rad 'v1.0/' RADIAL(rd_idx,1).SiteName '/' dayFolder]);
         end
         
         if (exist([servTH_dest_rad RADIAL(rd_idx,1).SiteName '/Last/' year '_' month '_' day], 'dir') ~= 7)
             mkdir([servTH_dest_rad RADIAL(rd_idx,1).SiteName '/Last/' year '_' month '_' day]);
         end
         
-        if (exist([path_dest_rad RADIAL(rd_idx,1).SiteName '/Last/' year '_' month '_' day], 'dir') ~= 7)
-            mkdir([path_dest_rad RADIAL(rd_idx,1).SiteName '/Last/' year '_' month '_' day]);
+        if (exist([path_dest_rad 'v1.0/' RADIAL(rd_idx,1).SiteName '/Last/' year '_' month '_' day], 'dir') ~= 7)
+            mkdir([path_dest_rad 'v1.0/' RADIAL(rd_idx,1).SiteName '/Last/' year '_' month '_' day]);
         end
+        
+        % Version 2.0
+        if (exist([servRD_dest_rad 'v2.0/' RADIAL(rd_idx,1).SiteName '/' yearFolder], 'dir') ~= 7)
+            mkdir([servRD_dest_rad 'v2.0/' RADIAL(rd_idx,1).SiteName '/' yearFolder]);
+        end
+        if (exist([servRD_dest_rad 'v2.0/' RADIAL(rd_idx,1).SiteName '/' monthFolder], 'dir') ~= 7)
+            mkdir([servRD_dest_rad 'v2.0/' RADIAL(rd_idx,1).SiteName '/' monthFolder]);
+        end
+        if (exist([servRD_dest_rad 'v2.0/' RADIAL(rd_idx,1).SiteName '/' dayFolder], 'dir') ~= 7)
+            mkdir([servRD_dest_rad 'v2.0/' RADIAL(rd_idx,1).SiteName '/' dayFolder]);
+        end
+        
+        if (exist([path_dest_rad 'v2.0/' RADIAL(rd_idx,1).SiteName '/Last/' year '_' month '_' day], 'dir') ~= 7)
+            mkdir([path_dest_rad 'v2.0/' RADIAL(rd_idx,1).SiteName '/Last/' year '_' month '_' day]);
+        end
+        
         % Create netCDF
-        [sT_err, sitePatternDate(rd_idx,:)] = Radial2netCDF_v20(RADIAL(rd_idx,1), range_cells_number, Radial_QC_params, [path_dest_rad RADIAL(rd_idx,1).SiteName '/Last/' year '_' month '_' day '/'], [servTH_dest_rad RADIAL(rd_idx,1).SiteName '/Last/' year '_' month '_' day '/'], [servRD_dest_rad RADIAL(rd_idx,1).SiteName '/' dayFolder '/']);
-        display(['[' datestr(now) '] - - ' RADIAL(rd_idx,1).SiteName '_' when ' radial netCDF file successfully created and stored.']);
+        sT_err = Radial2netCDF_v11(RADIAL(rd_idx,1), range_cells_number, [path_dest_rad 'v1.0/' RADIAL(rd_idx,1).SiteName '/Last/' year '_' month '_' day '/'], [servTH_dest_rad RADIAL(rd_idx,1).SiteName '/Last/' year '_' month '_' day '/'], [servRD_dest_rad 'v1.0/' RADIAL(rd_idx,1).SiteName '/' dayFolder '/']);
+        display(['[' datestr(now) '] - - ' RADIAL(rd_idx,1).SiteName '_' when ' radial netCDF v1.0 file successfully created and stored.']);
+        [sT_err, sitePatternDate(rd_idx,:)] = Radial2netCDF_v20(RADIAL(rd_idx,1), range_cells_number, Radial_QC_params, [path_dest_rad 'v2.0/' RADIAL(rd_idx,1).SiteName '/Last/' year '_' month '_' day '/'], [servRD_dest_rad 'v2.0/' RADIAL(rd_idx,1).SiteName '/' dayFolder '/']);
+        display(['[' datestr(now) '] - - ' RADIAL(rd_idx,1).SiteName '_' when ' radial netCDF v2.0 file successfully created and stored.']);
     end
 end
 
@@ -154,17 +173,16 @@ if (sT_err == 0)
 end
 
 if (sT_err == 0)
-    %     % Totals cleaning - TO BE COMMENTED AFTER INCREASE QC TEST
-    %     gdop_thr = sqrt(4);
-    %     maxspd_T = 150;
-    %     [TUVclean,I] = cleanTotals(TUV,maxspd_T,{'GDOPMaxOrthog','TotalErrors',gdop_thr});
-    %     TUV = TUVclean;
-    
     % Totals setting on a regular grid
     [TUVgrid,DIM,I] = gridTotals( TUV, 'true', 'true');
     
     % Totals masking
     [TUVmask,I] = maskTotals(TUVgrid,mask_cst,0);
+    
+    % Totals cleaning for graphic plot
+    gdop_thr = sqrt(4);
+    maxspd_T = 120;
+    [TUVclean,I] = cleanTotals(TUVmask,maxspd_T,{'GDOPMaxOrthog','TotalErrors',gdop_thr});
     
     % Contributing site coordinates and codes retrieval
     for Rds=1:szR
@@ -175,7 +193,8 @@ if (sT_err == 0)
     end
     
     % Set the netCDF destination folder paths for total data
-    path_dest_tot = [dest_tuvs(1:length(dest_tuvs)-5) 'netCDF/Last/'];
+    path_dest_tot_v1 = [dest_tuvs(1:length(dest_tuvs)-5) 'netCDF/v1.0/Last/'];
+    path_dest_tot_v2 = [dest_tuvs(1:length(dest_tuvs)-5) 'netCDF/v2.0/Last/'];
     servTH_dest_tot = [serv_netcdf 'TirLig/Totals/v1.0/Last/'];
     servRD_dest_tot = [dest_serv_tuvs(1:length(dest_serv_tuvs)-5) 'netCDF/'];
     
@@ -191,48 +210,68 @@ if (sT_err == 0)
             % If not, create them.
             if (exist([dest_tuvs yearFolder], 'dir') ~= 7)
                 mkdir([dest_tuvs yearFolder]);
-            end
-            if (exist([dest_serv_tuvs yearFolder], 'dir') ~= 7)
-                mkdir([dest_serv_tuvs yearFolder]);
-            end
-            %             if (exist([path_dest_tot yearFolder], 'dir') ~= 7)
-            %                 mkdir([path_dest_tot yearFolder]);
-            %             end
-            if (exist([servRD_dest_tot yearFolder], 'dir') ~= 7)
-                mkdir([servRD_dest_tot yearFolder]);
-            end
+            end            
             
             if (exist([dest_tuvs monthFolder], 'dir') ~= 7)
                 mkdir([dest_tuvs monthFolder]);
-            end
-            if (exist([dest_serv_tuvs monthFolder], 'dir') ~= 7)
-                mkdir([dest_serv_tuvs monthFolder]);
-            end
-            %             if (exist([path_dest_tot monthFolder], 'dir') ~= 7)
-            %                 mkdir([path_dest_tot monthFolder]);
-            %             end
-            if (exist([servRD_dest_tot monthFolder], 'dir') ~= 7)
-                mkdir([servRD_dest_tot monthFolder]);
             end
             
             if (exist([dest_tuvs dayFolder], 'dir') ~= 7)
                 mkdir([dest_tuvs dayFolder]);
             end
+            
+            if (exist([dest_serv_tuvs yearFolder], 'dir') ~= 7)
+                mkdir([dest_serv_tuvs yearFolder]);
+            end
+            
+            if (exist([dest_serv_tuvs monthFolder], 'dir') ~= 7)
+                mkdir([dest_serv_tuvs monthFolder]);
+            end              
+            
             if (exist([dest_serv_tuvs dayFolder], 'dir') ~= 7)
                 mkdir([dest_serv_tuvs dayFolder]);
             end
-            %             if (exist([path_dest_tot dayFolder], 'dir') ~= 7)
-            %                 mkdir([path_dest_tot dayFolder]);
-            %             end
-            if (exist([path_dest_tot year '_' month '_' day], 'dir') ~= 7)
-                mkdir([path_dest_tot year '_' month '_' day]);
+            
+            % Version 1.0
+            if (exist([servRD_dest_tot 'v1.0/' yearFolder], 'dir') ~= 7)
+                mkdir([servRD_dest_tot 'v1.0/' yearFolder]);
             end
+            
+            if (exist([servRD_dest_tot 'v1.0/' monthFolder], 'dir') ~= 7)
+                mkdir([servRD_dest_tot 'v1.0/' monthFolder]);
+            end
+            
+            if (exist([servRD_dest_tot 'v1.0/' dayFolder], 'dir') ~= 7)
+                mkdir([servRD_dest_tot 'v1.0/' dayFolder]);
+            end
+            
+            % Version 2.0
+            if (exist([servRD_dest_tot 'v2.0/' yearFolder], 'dir') ~= 7)
+                mkdir([servRD_dest_tot 'v2.0/' yearFolder]);
+            end
+            
+            if (exist([servRD_dest_tot 'v2.0/' monthFolder], 'dir') ~= 7)
+                mkdir([servRD_dest_tot 'v2.0/' monthFolder]);
+            end
+            
+            if (exist([servRD_dest_tot 'v2.0/' dayFolder], 'dir') ~= 7)
+                mkdir([servRD_dest_tot 'v2.0/' dayFolder]);
+            end            
+            
+            % Version 1.0
+            if (exist([path_dest_tot_v1 year '_' month '_' day], 'dir') ~= 7)
+                mkdir([path_dest_tot_v1 year '_' month '_' day]);
+            end
+            
+            % Version 2.0
+            if (exist([path_dest_tot_v2 year '_' month '_' day], 'dir') ~= 7)
+                mkdir([path_dest_tot_v2 year '_' month '_' day]);
+            end
+            
             if (exist([servTH_dest_tot year '_' month '_' day], 'dir') ~= 7)
                 mkdir([servTH_dest_tot year '_' month '_' day]);
             end
-            if (exist([servRD_dest_tot dayFolder], 'dir') ~= 7)
-                mkdir([servRD_dest_tot dayFolder]);
-            end
+            
             save(strcat([dest_tuvs dayFolder '/'], sprintf('%s.mat', when)), 'TUVmask');
             display(['[' datestr(now) '] - - ' when ' mat file successfully saved locally.']);
             [cp_status] = copyfile((strcat([dest_tuvs dayFolder '/'], sprintf('%s.mat', when))),(strcat([dest_serv_tuvs dayFolder '/'], sprintf('%s.mat', when))),'f');
@@ -256,7 +295,7 @@ if (sT_err == 0)
         line(X,Y,'marker','square','markersize',4,'color','r');
         text(X,Y,' TINO','vertical','top');
         
-        [handles,TimeIndex] = plotData(TUVmask,'m_vec',TUV.TimeStamp, 0.005, 'headangle', 25, 'headlength', 5.5, 'shaftwidth', 1);
+        [handles,TimeIndex] = plotData(TUVclean,'m_vec',TUV.TimeStamp, 0.005, 'headangle', 25, 'headlength', 5.5, 'shaftwidth', 1);
         
         when_fig = datestr(TUV.TimeStamp, 'dd-mmm-yyyy HH:MM:SS');
         title(sprintf('%s',when_fig));
@@ -264,6 +303,7 @@ if (sT_err == 0)
         pos2 = [0.3  0.035  0.4  0.015];
         %ha2 = axes('position', pos2);
         hc = colorbar;
+        caxis([0 100]);
         hc.Location = 'south';
         hc.Position = pos2;
         title(hc,'[cm/s]')
@@ -272,16 +312,8 @@ if (sT_err == 0)
         % (it makes two attempts)
         local_maps = [dest_tuvs(1:length(dest_tuvs)-5) 'Total_maps/'];
         try
-            print(strcat(local_maps, sprintf('%s.jpeg', when)),'-djpeg');
+            saveas(gcf,[local_maps when '.jpg']);
             display(['[' datestr(now) '] - - ' when ' map successfully saved locally.']);
-        catch err
-            display(['[' datestr(now) '] - - ERROR in ' mfilename ' -> ' err.message]);
-            sT_err = 1;
-        end
-        
-        try
-            print(strcat(local_maps, sprintf('%s.jpeg', when)),'-djpeg');
-            sT_err = 0;
         catch err
             display(['[' datestr(now) '] - - ERROR in ' mfilename ' -> ' err.message]);
             sT_err = 1;
@@ -306,8 +338,10 @@ if (sT_err == 0)
         close;
         
         % Saves Total in netCDF format
-        sT_err = Total2netCDF_v30(TUVmask, Grid, lon_lim, lat_lim, spatthresh, Total_QC_params, contrSiteLat, contrSiteLon, contrSiteCode, mask_cst, [path_dest_tot year '_' month '_' day '/'], [servTH_dest_tot year '_' month '_' day '/'], [servRD_dest_tot dayFolder '/'], lastPatternStr);
-        display(['[' datestr(now) '] - - ' when ' total netCDF file successfully created and stored.']);
+        sT_err = Total2netCDF_v21(TUVmask, Grid, lon_lim, lat_lim, maxspd_T, spatthresh, gdop_thr, contrSiteLat, contrSiteLon, contrSiteCode, mask_cst, [path_dest_tot_v1 year '_' month '_' day '/'], [servTH_dest_tot year '_' month '_' day '/'], [servRD_dest_tot 'v1.0/' dayFolder '/']);
+        display(['[' datestr(now) '] - - ' when ' total netCDF v1.0 file successfully created and stored.']);
+        sT_err = Total2netCDF_v30(TUVmask, Grid, lon_lim, lat_lim, spatthresh, Total_QC_params, contrSiteLat, contrSiteLon, contrSiteCode, mask_cst, [path_dest_tot_v2 year '_' month '_' day '/'], [servRD_dest_tot 'v2.0/' dayFolder '/'], lastPatternStr);
+        display(['[' datestr(now) '] - - ' when ' total netCDF v2.0 file successfully created and stored.']);
     end
 end
 

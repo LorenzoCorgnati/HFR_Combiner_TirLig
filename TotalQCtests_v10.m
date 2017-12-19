@@ -150,7 +150,8 @@ if (TQC_err == 0)
             % Modify the VART_QC variable of the nc file of the previous
             % hour (both locally and on RadarDisk)
             ncwrite(Total_QC_params.TempDerThr.hour1,'VART_QC',tempDer1h);
-            ncwrite(Total_QC_params.TempDerThr.hour1_RD,'VART_QC',tempDer1h);
+            [cp_status] = copyfile(Total_QC_params.TempDerThr.hour1,Total_QC_params.TempDerThr.hour1_RD,'f');
+            % ncwrite(Total_QC_params.TempDerThr.hour1_RD,'VART_QC',tempDer1h);
         end
         % Set the QC flag for the current hour to 0 (no QC performed)
         tempDer(find(mat_tot.U_grid ~= netcdf.getConstant('NC_FILL_FLOAT'))) = 0;

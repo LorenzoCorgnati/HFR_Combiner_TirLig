@@ -130,7 +130,8 @@ if (RQC_err == 0)
             % Modify the VART_QC variable of the nc file of the previous
             % hour (both locally and on RadarDisk)
             ncwrite(Radial_QC_params.TempDerThr.hour1,'VART_QC',tempDer1h);
-            ncwrite(Radial_QC_params.TempDerThr.hour1_RD,'VART_QC',tempDer1h);
+            [cp_status] = copyfile(Radial_QC_params.TempDerThr.hour1,Radial_QC_params.TempDerThr.hour1_RD,'f');
+            % ncwrite(Radial_QC_params.TempDerThr.hour1_RD,'VART_QC',tempDer1h);
         end
         % Set the QC flag for the current hour to 0 (no QC performed)
         tempDer(~isnan(radVel)) = 0;

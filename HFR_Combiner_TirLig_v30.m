@@ -68,13 +68,14 @@ clc
 
 warning('off','all');
 
+setup_nctoolbox;
+
 display(['[' datestr(now) '] - - ' 'HFR_Combiner_TirLig_v30 started.']);
 
 tic;
 %% Parameters
 % Reads the text file containing the parameters
-%param_file = textread('/Users/reverendo/Documents/CNR/RADAR/Script/hfrprogs/Src/parameters_TirLig_Meas.txt',  '%s', 'whitespace', '\n');
-param_file = textread('/Users/reverendo/Documents/CNR/RADAR/Script/hfrprogs/Src/parameters_TirLig_test.txt',  '%s', 'whitespace', '\n');
+param_file = textread('/home/radarcombine/HFR_Combiner_TirLig/Src/parameters_TirLig_Meas_v30.txt',  '%s', 'whitespace', '\n');
 
 % RadarDisk ftp account
 RD_ftp_host = param_file(2);
@@ -232,7 +233,7 @@ for rs=3:length(src_dir)
 end
 if (RadStruct_flag ==1)
     try
-        load(strcat(sr_folder, 'RadStruct.mat'));
+        load(strcat(src_folder, 'RadStruct.mat'));
         display(['[' datestr(now) '] - - ' 'RadStruct successfully loaded.']);
     catch err
         % Search for the last non-corrupted incremental copy of RadStruct.mat
@@ -274,52 +275,51 @@ end
 %%
 
 
-%% Coastline generation for area of interest
-% If the AoI.fig file has been saved, it's loaded, otherwise the
-% map is generated.
-AoI_flag = 0;
-for aoi=3:length(src_dir)
-    if (strcmp(src_dir(aoi,1).name,'AoI.fig'))
-        AoI_flag = 1;
-    end
-end
-if (AoI_flag == 0)
-    m_proj('transverse mercator','longitudes',lon_lim,'latitudes',lat_lim);
-    m_gshhs_f('patch',[.7 .7 .7],'edgecolor','none');
-    m_grid('box', 'fancy', 'tickdir', 'in', 'xlabeldir','end','fontsize',10);
-    
-    [X,Y]=m_ll2xy(9.6533333,44.1458333);
-    line(X,Y,'marker','square','markersize',4,'color','r');
-    text(X,Y,' MONT','vertical','top');
-    
-    [X,Y]=m_ll2xy(9.8492167,44.0263667);
-    line(X,Y,'marker','square','markersize',4,'color','r');
-    text(X,Y,' TINO','vertical','top');
-    
-    %     [X,Y]=m_ll2xy(16.1847500,41.8890333);
-    %     line(X,Y,'marker','square','markersize',4,'color','r');
-    %     text(X,Y,' VIES','vertical','top');
-    %
-    %     [X,Y]=m_ll2xy(16.1922000,41.7825667);
-    %     line(X,Y,'marker','square','markersize',4,'color','r');
-    %     text(X,Y,' PUGN','vertical','top');
-    %
-    %     [X,Y]=m_ll2xy(16.1162167,41.7310667);
-    %     line(X,Y,'marker','square','markersize',4,'color','r');
-    %     text(X,Y,' MATT','vertical','top');
-    %
-    %     [X,Y]=m_ll2xy(15.9253,41.6206667);
-    %     line(X,Y,'marker','square','markersize',4,'color','r');
-    %     text(X,Y,' MANF','vertical','top');
-    
-    h = gcf;
-    saveas(h, strcat(src_folder, 'AoI.fig'));
-    close;
-    
-    display(['[' datestr(now) '] - - ' 'Coastline successfully generated.']);
-end
-%%
-
+% %% Coastline generation for area of interest
+% % If the AoI.fig file has been saved, it's loaded, otherwise the
+% % map is generated.
+% AoI_flag = 0;
+% for aoi=3:length(src_dir)
+%     if (strcmp(src_dir(aoi,1).name,'AoI.fig'))
+%         AoI_flag = 1;
+%     end
+% end
+% if (AoI_flag == 0)
+%     m_proj('transverse mercator','longitudes',lon_lim,'latitudes',lat_lim);
+%     m_gshhs_f('patch',[.7 .7 .7],'edgecolor','none');
+%     m_grid('box', 'fancy', 'tickdir', 'in', 'xlabeldir','end','fontsize',10);
+%     
+%     [X,Y]=m_ll2xy(9.6533333,44.1458333);
+%     line(X,Y,'marker','square','markersize',4,'color','r');
+%     text(X,Y,' MONT','vertical','top');
+%     
+%     [X,Y]=m_ll2xy(9.8492167,44.0263667);
+%     line(X,Y,'marker','square','markersize',4,'color','r');
+%     text(X,Y,' TINO','vertical','top');
+%     
+%     %     [X,Y]=m_ll2xy(16.1847500,41.8890333);
+%     %     line(X,Y,'marker','square','markersize',4,'color','r');
+%     %     text(X,Y,' VIES','vertical','top');
+%     %
+%     %     [X,Y]=m_ll2xy(16.1922000,41.7825667);
+%     %     line(X,Y,'marker','square','markersize',4,'color','r');
+%     %     text(X,Y,' PUGN','vertical','top');
+%     %
+%     %     [X,Y]=m_ll2xy(16.1162167,41.7310667);
+%     %     line(X,Y,'marker','square','markersize',4,'color','r');
+%     %     text(X,Y,' MATT','vertical','top');
+%     %
+%     %     [X,Y]=m_ll2xy(15.9253,41.6206667);
+%     %     line(X,Y,'marker','square','markersize',4,'color','r');
+%     %     text(X,Y,' MANF','vertical','top');
+%     
+%     h = gcf;
+%     saveas(h, [src_folder, 'AoI.fig']);
+%     close;
+%     
+%     display(['[' datestr(now) '] - - ' 'Coastline successfully generated.']);
+% end
+% %%
 
 %% Grid generation for radial combination
 lon = linspace(lon_grid(1),lon_grid(2),lon_points);
@@ -550,27 +550,27 @@ while (kk > 0)
             
             totalsMakingTime = toc
             
-            % Copies the used radial files into the destination folders
-            % (ordered by site)
-            tic
-            for i=1:num_input
-                curr_file = char(inputfiles(i));
-                switch curr_file(116)
-                    case 'V' % VIAR
-                        [cp_status] = copyfile(curr_file,[site1_folder curr_file(111:139)],'f');
-                    case 'T' % TINO
-                        [cp_status] = copyfile(curr_file,[site2_folder curr_file(111:139)],'f');
-                    case 'M' % MONT
-                        [cp_status] = copyfile(curr_file,[site3_folder curr_file(111:139)],'f');
-                    case 'x'
-                        [cp_status] = copyfile(curr_file,[site4_folder curr_file(111:139)],'f');
-                    case 'y'
-                        [cp_status] = copyfile(curr_file,[site5_folder curr_file(111:139)],'f');
-                    otherwise
-                        [cp_status] = copyfile(curr_file,[site6_folder curr_file(111:139)],'f');
-                end
-            end
-            filesCopyTime = toc
+%             % Copies the used radial files into the destination folders
+%             % (ordered by site)
+%             tic
+%             for i=1:num_input
+%                 curr_file = char(inputfiles(i));
+%                 switch curr_file(116)
+%                     case 'V' % VIAR
+%                         [cp_status] = copyfile(curr_file,[site1_folder curr_file(111:139)],'f');
+%                     case 'T' % TINO
+%                         [cp_status] = copyfile(curr_file,[site2_folder curr_file(111:139)],'f');
+%                     case 'M' % MONT
+%                         [cp_status] = copyfile(curr_file,[site3_folder curr_file(111:139)],'f');
+%                     case 'x'
+%                         [cp_status] = copyfile(curr_file,[site4_folder curr_file(111:139)],'f');
+%                     case 'y'
+%                         [cp_status] = copyfile(curr_file,[site5_folder curr_file(111:139)],'f');
+%                     otherwise
+%                         [cp_status] = copyfile(curr_file,[site6_folder curr_file(111:139)],'f');
+%                 end
+%             end
+%             filesCopyTime = toc
             
 %             % Clean the radial local working folder
 %             rmdir([radProc_folder 'dati-radar'],'s');

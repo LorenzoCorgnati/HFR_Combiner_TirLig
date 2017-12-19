@@ -14,7 +14,6 @@
 %         Radial_QC_params: structure containing parameters for radial QC
 %         tests
 %         dest_nc_local : local folder where to save the netCDF file
-%         dest_nc_tds : THREDDS folder where to save the netCDF file
 %         dest_nc_rad : RadarDisk folder where to save the netCDF file
 
 % OUTPUT:
@@ -28,7 +27,7 @@
 % E-mail: lorenzo.corgnati@sp.ismar.cnr.it
 %%
 
-function [R2C_err, PatternDate] = Radial2netCDF_v20(HFRP_RUV, range_cells_number, Radial_QC_params, dest_nc_local, dest_nc_tds, dest_nc_rd)
+function [R2C_err, PatternDate] = Radial2netCDF_v20(HFRP_RUV, range_cells_number, Radial_QC_params, dest_nc_local, dest_nc_rd)
 
 display(['[' datestr(now) '] - - ' 'Radial2netCDF_v20.m started.']);
 
@@ -54,7 +53,6 @@ siteCode = rfile(length(rfile)-23:length(rfile)-20);
 fileTime = rfile(length(rfile)-18:length(rfile)-4);
 
 ncfile_local = [dest_nc_local 'RDL_' fileType '_' siteCode '_' fileTime '.nc'];
-ncfile_tds = [dest_nc_tds 'RDL_' fileType '_' siteCode '_' fileTime '.nc'];
 ncfile_rd = [dest_nc_rd 'RDL_' fileType '_' siteCode '_' fileTime '.nc'];
 
 % Citation string
@@ -1418,16 +1416,6 @@ if (R2C_err == 0)
     %%
     
     %% Copy the netCDF file to RadarDisk and THREDDS server
-    % Copies the netCDF file to the THREDDS server
-    if (R2C_err == 0)
-        try
-            [cp_status] = copyfile(ncfile_local,ncfile_tds,'f');
-        catch err
-            display(['[' datestr(now) '] - - ERROR in ' mfilename ' -> ' err.message]);
-            R2C_err = 1;
-        end
-    end
-    
     % Copies the netCDF file to the RadarDisk
     if (R2C_err == 0)
         try
