@@ -62,7 +62,14 @@ folder structure compliant to the ISMAR THREDDS requirements.
 The 3.0 release implements the data and metadata structure compliant to
 CMEMS needs and performs QC tests.
 
+The required toolboxes are:
+- HFR_Progs-2.1.2 (https://cencalarchive.org/~cocmpmb/cocmp-wiki/index.php/Documentation:HFR_Progs);
+- M_Map (http://www2.ocgy.ubc.ca/~rich/private/mapug.html#p1);
+- GSHHS (http://www.ngdc.noaa.gov/mgg/shorelines/data/gshhs/);
+- Nctoolbox-1.1.3 (https://github.com/nctoolbox/nctoolbox);
+- Rdir (http://www.mathworks.com/matlabcentral/fileexchange/19550-recursive-directory-listing).
+
 Author: Lorenzo Corgnati
-Date: January 26, 2017
+Date: December 18, 2017
 
 E-mail: lorenzo.corgnati@sp.ismar.cnr.it
