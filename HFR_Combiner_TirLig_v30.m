@@ -350,12 +350,12 @@ setupTime = toc;
 kk = 5;
 while (kk > 0)
     % RadarDisk RadialRealTime folder cleaning.
-%     APT_err = 0;
-%     try
-%         [cl_status] = cleanRRTfolder(work_folder);
-%     catch err
-%         APT_err = 1;
-%     end
+     APT_err = 0;
+     try
+         [cl_status] = cleanRRTfolder(work_folder);
+     catch err
+         APT_err = 1;
+     end
     
     tic;
     radialfiles = dir(work_folder);
@@ -430,7 +430,7 @@ while (kk > 0)
         for rss=1:length(RadStruct) % Sweeps RadStruct
             if (strcmp(curr_TS, RadStruct(rss).TS)) % Finds an element in RadSruct with the same TS
                 flagMatch = 1;
-                if (sum(RadStruct(rss).missingID) == 0) % Checks if it's complete
+                if (sum(RadStruct(rss).missingID) == 2) % Checks if it's complete
                     break;
                 else
                     if (RadStruct(rss).missingID(curr_ID) == 1) % Checks if the current ID is missing
@@ -517,7 +517,7 @@ while (kk > 0)
     display(['[' datestr(now) '] - - ' 'Processing start and stop times successfully checked.']);
     for rss=start_time:stop_time % Sweeps RadStruct
         if (RadStruct(rss).processedFlag == 0) % Checks if the group of radials has to be processed
-            % Make local copies of the radial files and insert the filenames strings in a cell array of strings.
+            % Insert the filenames strings in a cell array of strings.
             inp = 1;
             for mis=1:4
                 if (RadStruct(rss).missingID(mis) == 0)
@@ -584,6 +584,12 @@ while (kk > 0)
         incr_str = strcat((int2str(now(1))), '_', (int2str(now(2))), '_', (int2str(now(3))), '_', (int2str(now(4))), '_', (int2str(now(5))));
         save(strcat(incr_folder, 'RadStruct_', incr_str, '.mat'), 'RadStruct');
     end
+    
+    % Reset start and stop times for radial processing
+    start_str = '0';
+    stop_str = '0';
+    
+    % Pause
     pause(900);
 end
 

@@ -312,7 +312,7 @@ if (sT_err == 0)
         % (it makes two attempts)
         local_maps = [dest_tuvs(1:length(dest_tuvs)-5) 'Total_maps/'];
         try
-            saveas(gcf,[local_maps when '.jpg']);
+            saveas(gcf,[local_maps when '.jpeg']);
             display(['[' datestr(now) '] - - ' when ' map successfully saved locally.']);
         catch err
             display(['[' datestr(now) '] - - ERROR in ' mfilename ' -> ' err.message]);

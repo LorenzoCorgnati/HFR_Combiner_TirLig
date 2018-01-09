@@ -390,11 +390,13 @@ if (R2C_err == 0)
     % Spatial Count
     ersc = nan(size(range));
     ersc(rb_map_idx) = R.ersc;
+    ersc(ersc>127) = 127;
     ersc( ersc==999 ) = NaN; % native bad-value
     
     % Temporal Count
     ertc = nan(size(range));
     ertc(rb_map_idx) = R.ertc;
+    ertc(ertc>127) = 127;
     ertc( ertc==999 ) = NaN; % native bad-value
     
     % X-Distance
