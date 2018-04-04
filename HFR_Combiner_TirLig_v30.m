@@ -62,6 +62,8 @@
 % E-mail: lorenzo.corgnati@sp.ismar.cnr.it
 %%
 
+warning('off', 'all')
+
 clear all
 close all
 clc
@@ -75,7 +77,8 @@ display(['[' datestr(now) '] - - ' 'HFR_Combiner_TirLig_v30 started.']);
 tic;
 %% Parameters
 % Reads the text file containing the parameters
-param_file = textread('/home/radarcombine/HFR_Combiner_TirLig/Src/parameters_TirLig_Meas_v30.txt',  '%s', 'whitespace', '\n');
+% param_file = textread('/home/radarcombine/HFR_Combiner_TirLig/Src/parameters_TirLig_Meas_v30.txt',  '%s', 'whitespace', '\n');
+param_file = textread('/Users/reverendo/Documents/CNR/RADAR/Script/hfrprogs/Src/parameters_TirLig_test.txt',  '%s', 'whitespace', '\n');
 
 % RadarDisk ftp account
 RD_ftp_host = param_file(2);
@@ -152,7 +155,7 @@ maxspd_R = maxspd_R{1}';
 
 % Average Radial Bearing Range
 avgRadBear_str_R = textscan(char(param_file(58)), '%f');
-avgRadBear_R.site(1).code = 'MONT';
+avgRadBear_R.site(1).code = 'PCOR';
 avgRadBear_R.site(1).range = avgRadBear_str_R{1}';
 
 avgRadBear_str_R = textscan(char(param_file(60)), '%f');
@@ -350,12 +353,12 @@ setupTime = toc;
 kk = 5;
 while (kk > 0)
     % RadarDisk RadialRealTime folder cleaning.
-     APT_err = 0;
-     try
-         [cl_status] = cleanRRTfolder(work_folder);
-     catch err
-         APT_err = 1;
-     end
+%     APT_err = 0;
+%     try
+%         [cl_status] = cleanRRTfolder(work_folder);
+%     catch err
+%         APT_err = 1;
+%     end
     
     tic;
     radialfiles = dir(work_folder);
@@ -396,8 +399,8 @@ while (kk > 0)
     % - TS = TimeStamp (string);
     % - site1 = VIAR radial filename (string);
     % - site2 = TINO radial filename (string);
-    % - site3 = MONT radial filename (string);
-    % - site4 = PORT radial filename (string);
+    % - site3 = PCOR radial filename (string);
+    % - site4 = PFIN radial filename (string);
     % - processedFlag = processing status flag (int, 0 if not yet
     %   processed, 1 if already processed;
     % - missingID = IDs of the eventually not evaluated radials
@@ -415,16 +418,16 @@ while (kk > 0)
     end
     while (num_rad > 0)
         curr_TS = radialfiles(1,1).name(11:25);
-        curr_IDstr = radialfiles(1,1).name(6);
+        curr_IDstr = radialfiles(1,1).name(6:9);
         switch curr_IDstr
-            case 'V'
+            case 'VIAR'
                 curr_ID = 1; % VIAR
-            case 'T'
+            case 'TINO'
                 curr_ID = 2; % TINO
-            case 'M'
-                curr_ID = 3; % MONT
-            otherwise
-                curr_ID = 4; % PORT
+            case 'PCOR'
+                curr_ID = 3; % PCOR
+            case 'PFIN'
+                curr_ID = 4; % PFIN
         end
         flagMatch = 0;
         for rss=1:length(RadStruct) % Sweeps RadStruct
@@ -517,7 +520,7 @@ while (kk > 0)
     display(['[' datestr(now) '] - - ' 'Processing start and stop times successfully checked.']);
     for rss=start_time:stop_time % Sweeps RadStruct
         if (RadStruct(rss).processedFlag == 0) % Checks if the group of radials has to be processed
-            % Insert the filenames strings in a cell array of strings.
+            % Make local copies of the radial files and insert the filenames strings in a cell array of strings.
             inp = 1;
             for mis=1:4
                 if (RadStruct(rss).missingID(mis) == 0)
@@ -591,6 +594,7 @@ while (kk > 0)
     
     % Pause
     pause(900);
+    
 end
 
 %%
