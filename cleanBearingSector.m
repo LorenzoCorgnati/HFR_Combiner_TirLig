@@ -23,6 +23,8 @@ switch drtRD.SiteName
         idx_tbc = find(drtRD.RangeBearHead(:,2) <= 70 | (drtRD.RangeBearHead(:,2) >= 125 & drtRD.RangeBearHead(:,2) <= 360));
     case 'MONT'
         idx_tbc = find((drtRD.RangeBearHead(:,2) >= 225 & drtRD.RangeBearHead(:,2) <= 320));
+    case 'PCOR'
+        idx_tbc = find((drtRD.RangeBearHead(:,2) >= 225 & drtRD.RangeBearHead(:,2) <= 320));
 end
 
 clRD = subsrefRADIAL(drtRD, idx_tbc);

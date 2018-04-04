@@ -29,7 +29,7 @@
 
 function [overall, varThr, tempDer, GDOPThr, dataDens, velThr] = TotalQCtests_v10(mat_tot, Total_QC_params)
 
-display(['[' datestr(now) '] - - ' 'TotaQCtests_v10.m started.']);
+display(['[' datestr(now) '] - - ' 'TotalQCtests_v10.m started.']);
 
 TQC_err = 0;
 
