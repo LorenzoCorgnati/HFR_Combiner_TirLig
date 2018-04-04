@@ -353,12 +353,12 @@ setupTime = toc;
 kk = 5;
 while (kk > 0)
     % RadarDisk RadialRealTime folder cleaning.
-%     APT_err = 0;
-%     try
-%         [cl_status] = cleanRRTfolder(work_folder);
-%     catch err
-%         APT_err = 1;
-%     end
+    APT_err = 0;
+    try
+        [cl_status] = cleanRRTfolder(work_folder);
+    catch err
+        APT_err = 1;
+    end
     
     tic;
     radialfiles = dir(work_folder);
