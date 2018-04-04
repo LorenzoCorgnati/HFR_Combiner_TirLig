@@ -54,7 +54,7 @@ radial_QC_temporal_derivative _threshold [m/s]
 1
 radial_QC_velocity_threshold [m/s]
 1.2
-MONT radial_QC_average_radial_bearing_range [deg]
+PCOR radial_QC_average_radial_bearing_range [deg]
 190 250
 TINO radial_QC_average_radial_bearing_range [deg]
 150 360
