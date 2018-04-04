@@ -292,9 +292,13 @@ if (sT_err == 0)
         m_gshhs_f('patch',[.7 .7 .7],'edgecolor','none');
         m_grid('box', 'fancy', 'tickdir', 'in', 'xlabeldir','end','fontsize',10);
         
-        [X,Y]=m_ll2xy(9.6533333,44.1458333);
+%         [X,Y]=m_ll2xy(9.6533333,44.1458333);
+%         line(X,Y,'marker','square','markersize',4,'color','r');
+%         text(X,Y,' MONT','vertical','top');
+        
+        [X,Y]=m_ll2xy(9.6593000,44.1435167);
         line(X,Y,'marker','square','markersize',4,'color','r');
-        text(X,Y,' MONT','vertical','top');
+        text(X,Y,' PCOR','vertical','top');
         
         [X,Y]=m_ll2xy(9.8492167,44.0263667);
         line(X,Y,'marker','square','markersize',4,'color','r');

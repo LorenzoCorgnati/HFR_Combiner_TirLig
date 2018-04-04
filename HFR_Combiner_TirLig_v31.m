@@ -158,7 +158,7 @@ maxspd_R = maxspd_R{1}';
 
 % Average Radial Bearing Range
 avgRadBear_str_R = textscan(char(param_file(58)), '%f');
-avgRadBear_R.site(1).code = 'MONT';
+avgRadBear_R.site(1).code = 'PCOR';
 avgRadBear_R.site(1).range = avgRadBear_str_R{1}';
 
 avgRadBear_str_R = textscan(char(param_file(60)), '%f');
@@ -355,13 +355,13 @@ setupTime = toc;
 %% Processes data.
 kk = 5;
 while (kk > 0)
-    % RadarDisk RadialRealTime folder cleaning.
-    APT_err = 0;
-    try
-        [cl_status] = cleanRRTfolder(work_folder);
-    catch err
-        APT_err = 1;
-    end
+%     % RadarDisk RadialRealTime folder cleaning.
+%     APT_err = 0;
+%     try
+%         [cl_status] = cleanRRTfolder(work_folder);
+%     catch err
+%         APT_err = 1;
+%     end
     
     tic;
     radialfiles = dir(work_folder);
@@ -421,15 +421,15 @@ while (kk > 0)
     end
     while (num_rad > 0)
         curr_TS = radialfiles(1,1).name(11:25);
-        curr_IDstr = radialfiles(1,1).name(6);
+        curr_IDstr = radialfiles(1,1).name(6:9);
         switch curr_IDstr
-            case 'V'
+            case 'VIAR'
                 curr_ID = 1; % VIAR
-            case 'T'
+            case 'TINO'
                 curr_ID = 2; % TINO
-            case 'M'
+            case 'PCOR'
                 curr_ID = 3; % PCOR
-            otherwise
+            case 'PFIN'
                 curr_ID = 4; % PFIN
         end
         flagMatch = 0;
