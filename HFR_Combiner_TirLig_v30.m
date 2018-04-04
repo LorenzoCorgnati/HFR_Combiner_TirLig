@@ -62,7 +62,7 @@
 % E-mail: lorenzo.corgnati@sp.ismar.cnr.it
 %%
 
-warning('off', 'all')
+warning('off', 'all');
 
 clear all
 close all
@@ -271,7 +271,7 @@ else
     RadStruct(1).processedFlag = 0;
     RadStruct(1).missingID = [1 1 1 1];
     RadStruct(1).corruptedFlag = 0;
-    
+
     display(['[' datestr(now) '] - - ' 'RadStruct successfully initialized.']);
 end
 
@@ -291,15 +291,15 @@ end
 %     m_proj('transverse mercator','longitudes',lon_lim,'latitudes',lat_lim);
 %     m_gshhs_f('patch',[.7 .7 .7],'edgecolor','none');
 %     m_grid('box', 'fancy', 'tickdir', 'in', 'xlabeldir','end','fontsize',10);
-%     
+%
 %     [X,Y]=m_ll2xy(9.6533333,44.1458333);
 %     line(X,Y,'marker','square','markersize',4,'color','r');
 %     text(X,Y,' MONT','vertical','top');
-%     
+%
 %     [X,Y]=m_ll2xy(9.8492167,44.0263667);
 %     line(X,Y,'marker','square','markersize',4,'color','r');
 %     text(X,Y,' TINO','vertical','top');
-%     
+%
 %     %     [X,Y]=m_ll2xy(16.1847500,41.8890333);
 %     %     line(X,Y,'marker','square','markersize',4,'color','r');
 %     %     text(X,Y,' VIES','vertical','top');
@@ -315,11 +315,11 @@ end
 %     %     [X,Y]=m_ll2xy(15.9253,41.6206667);
 %     %     line(X,Y,'marker','square','markersize',4,'color','r');
 %     %     text(X,Y,' MANF','vertical','top');
-%     
+%
 %     h = gcf;
 %     saveas(h, [src_folder, 'AoI.fig']);
 %     close;
-%     
+%
 %     display(['[' datestr(now) '] - - ' 'Coastline successfully generated.']);
 % end
 % %%
@@ -359,7 +359,7 @@ while (kk > 0)
     catch err
         APT_err = 1;
     end
-    
+
     tic;
     radialfiles = dir(work_folder);
     fileListingTime = toc;
@@ -374,7 +374,7 @@ while (kk > 0)
             end
         end
     end
-    
+
     % Checks the correct loading of the work folder. If it has not been
     % loaded correctly, the application pauses before to retry.
     while (size_rad < 1)
@@ -392,9 +392,9 @@ while (kk > 0)
             end
         end
     end
-    
+
     display(['[' datestr(now) '] - - ' 'Radial files successfully listed.']);
-    
+
     % Builds the radials information structure RadStruct as:
     % - TS = TimeStamp (string);
     % - site1 = VIAR radial filename (string);
@@ -489,13 +489,13 @@ while (kk > 0)
             num_rad = 0;
         end
     end
-    
+
     display(['[' datestr(now) '] - - ' 'RadStruct successfully filled in.']);
-    
+
     % Sorts RadStruct by date
     RadStruct = RSsort_TS(RadStruct);
     display(['[' datestr(now) '] - - ' 'RadStruct successfully sorted.']);
-    
+
     % Periodically saves incremental copies of RadStruct
     now = clock;
     if (mod(now(4),4) == 0) && (now(5) < 16)
@@ -504,7 +504,7 @@ while (kk > 0)
         display(['[' datestr(now) '] - - ' 'Incremental copy of RadStruct successfully saved.']);
     end
     RadStructBuildingTime = toc;
-    
+
     % Processes radials
     % Checks if start and stop times are present
     if (start_str == '0')
@@ -540,7 +540,7 @@ while (kk > 0)
                     end
                 end
             end
-            
+
             % Makes the totals.
             tic;
             num_input = size(inputfiles,2);
@@ -550,9 +550,9 @@ while (kk > 0)
             save(strcat(src_folder, 'RadStruct.mat'), 'RadStruct');
             display(['[' datestr(now) '] - - ' 'RadStruct successfully saved.']);
             %             end
-            
+
             totalsMakingTime = toc
-            
+
 %             % Copies the used radial files into the destination folders
 %             % (ordered by site)
 %             tic
@@ -574,10 +574,10 @@ while (kk > 0)
 %                 end
 %             end
 %             filesCopyTime = toc
-            
+
 %             % Clean the radial local working folder
 %             rmdir([radProc_folder 'dati-radar'],'s');
-            
+
             clear inputfiles;
         end
     end
@@ -587,15 +587,14 @@ while (kk > 0)
         incr_str = strcat((int2str(now(1))), '_', (int2str(now(2))), '_', (int2str(now(3))), '_', (int2str(now(4))), '_', (int2str(now(5))));
         save(strcat(incr_folder, 'RadStruct_', incr_str, '.mat'), 'RadStruct');
     end
-    
+
     % Reset start and stop times for radial processing
     start_str = '0';
     stop_str = '0';
-    
+
     % Pause
     pause(900);
-    
+
 end
 
 %%
-
