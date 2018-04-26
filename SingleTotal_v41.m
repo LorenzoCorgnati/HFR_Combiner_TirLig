@@ -117,7 +117,7 @@ if (sT_err == 0)
             mkdir([path_dest_rad 'v1.0/' RADIAL(rd_idx,1).SiteName '/Last/' year '_' month '_' day]);
         end
         
-        % Version 2.01
+        % Version 2.1
         if (exist([servRD_dest_rad 'v2.1/' RADIAL(rd_idx,1).SiteName '/' yearFolder], 'dir') ~= 7)
             mkdir([servRD_dest_rad 'v2.1/' RADIAL(rd_idx,1).SiteName '/' yearFolder]);
         end
@@ -250,7 +250,7 @@ if (sT_err == 0)
                 mkdir([servRD_dest_tot 'v1.0/' dayFolder]);
             end
             
-            % Version 2.01
+            % Version 2.1
             if (exist([servRD_dest_tot 'v2.1/' yearFolder], 'dir') ~= 7)
                 mkdir([servRD_dest_tot 'v2.1/' yearFolder]);
             end
@@ -268,7 +268,7 @@ if (sT_err == 0)
                 mkdir([path_dest_tot_v1 year '_' month '_' day]);
             end
             
-            % Version 2.01
+            % Version 2.1
             if (exist([path_dest_tot_v2 year '_' month '_' day], 'dir') ~= 7)
                 mkdir([path_dest_tot_v2 year '_' month '_' day]);
             end

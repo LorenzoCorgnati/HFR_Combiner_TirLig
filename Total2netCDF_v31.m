@@ -276,6 +276,11 @@ if (T2C_err == 0)
             'Datatype','single',...
             'Format',ncfmt);
         
+        nccreate(ncfile,'crs',...
+            'Dimensions',{'crs',time_dim},...
+            'Datatype','int16',...
+            'Format',ncfmt);
+        
         nccreate(ncfile,'DEPH',...
             'Dimensions',{'DEPH',depth_dim},...
             'Datatype','single',...
@@ -437,6 +442,11 @@ if (T2C_err == 0)
         ncwriteatt(ncfile,'LONGITUDE','units',char('degrees_east'));
         ncwriteatt(ncfile,'LONGITUDE','axis',char('X'));
         ncwriteatt(ncfile,'LONGITUDE','ancillary_variables',char('POSITION_SEADATANET_QC'));
+        
+        ncwriteatt(ncfile,'crs','grid_mapping_name',char('latitude_longitude'));
+        ncwriteatt(ncfile,'crs','epsg_code',char('EPSG:4326'));
+        ncwriteatt(ncfile,'crs','semi_major_axis',6378137.0);
+        ncwriteatt(ncfile,'crs','inverse_flattening',298.257223563);
         
         ncwriteatt(ncfile,'DEPH','long_name',char('Depth of measurement'));
         ncwriteatt(ncfile,'DEPH','standard_name',char('depth'));

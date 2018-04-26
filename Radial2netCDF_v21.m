@@ -688,6 +688,14 @@ if (R2C_err == 0)
         netcdf.putAtt(ncid, varid_lon, 'FillValue', netcdf.getConstant('NC_FILL_FLOAT'));
         netcdf.putAtt(ncid, varid_lon, 'ancillary_variables', 'POSITION_SEADATANET_QC');
         
+        % crs
+        varid_crs = netcdf.defVar( ncid, 'crs', 'short', dimid_t);
+        netcdf.defVarDeflate(ncid, varid_crs, true, true, 6);
+        netcdf.putAtt( ncid, varid_crs, 'grid_mapping_name', 'latitude_longitude' );
+        netcdf.putAtt( ncid, varid_crs, 'epsg_code', 'EPSG:4326' );
+        netcdf.putAtt( ncid, varid_crs, 'semi_major_axis', single(6378137.0) );
+        netcdf.putAtt(ncid, varid_crs, 'inverse_flattening', single(298.257223563));
+        
         %%
         
         %% Add data variables
