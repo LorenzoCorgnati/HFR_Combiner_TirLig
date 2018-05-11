@@ -721,7 +721,7 @@ if (T2C_err == 0)
         ncwriteatt(ncfile,'/','source_platform_category_code',char('17'));
         ncwriteatt(ncfile,'/','institution',char('National Research Council - Institute of Marine Science, S.S. Lerici'));
         ncwriteatt(ncfile,'/','institution_edmo_code',char('134'));
-        ncwriteatt(ncfile,'/','data_assembly_center',char('HFR GDAC'));
+        ncwriteatt(ncfile,'/','data_assembly_center',char('European HFR Node'));
         ncwriteatt(ncfile,'/','id',char(dataID));
                 
         % Geo-spatial-temporal
@@ -749,7 +749,7 @@ if (T2C_err == 0)
         ncwriteatt(ncfile,'/','acknowledgment',char('ISMAR HF Radar Network has been established within RITMARE and Jerico-Next projects. The network has been designed, implemented and managed through the efforts of ISMAR S.S. Lerici.'));
         % Provenance
         ncwriteatt(ncfile,'/','date_created',char(dateCreated));      
-        ncwriteatt(ncfile,'/','history',char([time_coll ' data collected. ' dateCreated ' netCDF file created and sent to HFR GDAC']));
+        ncwriteatt(ncfile,'/','history',char([time_coll ' data collected. ' dateCreated ' netCDF file created and sent to European HFR Node']));
         ncwriteatt(ncfile,'/','date_modified',char(dateCreated));
         ncwriteatt(ncfile,'/','date_update',char(dateCreated));
         ncwriteatt(ncfile,'/','processing_level',char('3B'));

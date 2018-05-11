@@ -586,7 +586,7 @@ if (R2C_err == 0)
         mode = netcdf.getConstant('NETCDF4');
         mode = bitor(mode, netcdf.getConstant('CLASSIC_MODEL'));
         ncid = netcdf.create(ncfile_local, mode);
-        hist_create = [time_coll ' data collected. ' dateCreated ' netCDF file created and sent to HFR GDAC'];
+        hist_create = [time_coll ' data collected. ' dateCreated ' netCDF file created and sent to European HFR Node'];
         
         % Add dimensions (in order of T, Z, Y, X for CF/COARDS compliance)
         
@@ -1118,7 +1118,7 @@ if (R2C_err == 0)
         netcdf.putAtt(ncid, varid_global, 'source_platform_category_code', '17');
         netcdf.putAtt(ncid, varid_global, 'institution', 'CNR-ISMAR: National Research Council - Institute of Marine Sciences, S.S. Lerici');
         netcdf.putAtt(ncid, varid_global, 'institution_edmo_code', '134');
-        netcdf.putAtt(ncid, varid_global, 'data_assembly_center', 'HFR GDAC');
+        netcdf.putAtt(ncid, varid_global, 'data_assembly_center', 'European HFR Node');
         netcdf.putAtt(ncid, varid_global, 'id', ['HFR_TirLig_' Site '_' strrep(fileTime(1:10), '_', '-') '_' fileTime(12:13) 'Z']);
         % Geo-spatial-temporal
         netcdf.putAtt(ncid, varid_global, 'data_type', 'HF radar radial data');
