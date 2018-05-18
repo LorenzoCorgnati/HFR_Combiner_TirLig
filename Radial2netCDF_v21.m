@@ -22,7 +22,7 @@
 
 
 % Author: Lorenzo Corgnati
-% Date: March 15, 2018
+% Date: May 15, 2018
 
 % E-mail: lorenzo.corgnati@sp.ismar.cnr.it
 %%
@@ -35,9 +35,10 @@ R2C_err = 0;
 
 warning('off', 'all');
 
-%% Define the maximum number of allowed sites
+%% Define the maximum number of allowed sites and of xlink references
 
 maxsite = 50;
+refmax = 1;
 
 %%
 
@@ -60,6 +61,19 @@ ncfile_rd = [dest_nc_rd 'RDL_' fileType '_' siteCode '_' fileTime '.nc'];
 % Citation and distribution string
 citation_str = ['These data were collected and made freely available by the Copernicus project and the programs that contribute to it. Data collected and processed by CNR-ISMAR within RITMARE and Jerico-Next projects -  Year ' fileTime(1:4)];
 distribution_str = 'These data follow Copernicus standards; they are public and free of charge. User assumes all risk for use of data. User must display citation in any publication or product using data. User must contact PI prior to any commercial use of data.';
+
+%%
+
+%% Define EDIOS and EDMO codes, site code, platform code, id and metadata resources
+
+EDIOS_Series_ID = 'HFR_TirLig';
+EDIOS_Platform_ID = siteCode;
+EDMO_code = 134;
+site_code = EDIOS_Series_ID;
+platform_code = [EDIOS_Series_ID '_' EDIOS_Platform_ID];
+id = [EDIOS_Series_ID '_' EDIOS_Platform_ID '_' strrep(fileTime(1:10), '_', '-') '_' fileTime(12:13) 'Z'];
+TDS_catalog = 'http://150.145.136.27:8080/thredds/HF_RADAR/TirLig/TirLig_catalog.html';
+xlink = ['<sdn_reference xlink:href="' TDS_catalog '" xlink:role="" xlink:type="URL"/>'];
 
 %%
 
@@ -596,7 +610,13 @@ if (R2C_err == 0)
         dimid_range = netcdf.defDim(ncid, 'RNGE', numel( range_dim));
         dimid_depth = netcdf.defDim(ncid, 'DEPH', 1);
         dimid_maxsite = netcdf.defDim(ncid, 'MAXSITE', maxsite);
+        dimid_refmax = netcdf.defDim(ncid, 'REFMAX', refmax);
         dimid_string4 = netcdf.defDim(ncid, 'STRING4', 4);
+        dimid_string_site_code = netcdf.defDim(ncid, ['STRING' num2str(length(site_code))], length(site_code));
+        dimid_string_platform_code = netcdf.defDim(ncid, ['STRING' num2str(length(platform_code))], length(platform_code));
+        dimid_string_sdn_local_cdi_id = netcdf.defDim(ncid, ['STRING' num2str(length(id))], length(id));
+        dimid_string_sdn_references = netcdf.defDim(ncid, ['STRING' num2str(length(TDS_catalog))], length(TDS_catalog));
+        dimid_string_sdn_xlink = netcdf.defDim(ncid, ['STRING' num2str(length(xlink))], length(xlink));
         
         %dimid_lat = netcdf.defDim(ncid, 'lat', length(LatU));
         %dimid_lon = netcdf.defDim(ncid, 'lon', length(LonU));
@@ -628,6 +648,10 @@ if (R2C_err == 0)
         netcdf.putAtt(ncid, varid_t, 'units', ['days since ' time_units]);
         netcdf.putAtt(ncid, varid_t, 'calendar', 'Julian');
         netcdf.putAtt(ncid, varid_t, 'axis', 'T');
+        netcdf.putAtt(ncid, varid_t, 'sdn_parameter_name', 'Elapsed time (since 1950-01-01T00:00:00Z)');
+        netcdf.putAtt(ncid, varid_t, 'sdn_parameter_urn', 'SDN:P01::ELTJLD01');
+        netcdf.putAtt(ncid, varid_t, 'sdn_uom_name', 'Days');
+        netcdf.putAtt(ncid, varid_t, 'sdn_uom_urn', 'SDN:P06::UTAA');
         netcdf.putAtt(ncid, varid_t, 'ancillary_variables', 'TIME_SEADATANET_QC');
         
         % Bearing (arbitrary 'y' dimension)
@@ -635,6 +659,10 @@ if (R2C_err == 0)
         netcdf.putAtt(ncid, varid_bearing, 'axis', 'Y');
         netcdf.putAtt(ncid, varid_bearing, 'long_name', 'Bearing Away From Instrument');
         netcdf.putAtt(ncid, varid_bearing, 'units', 'degrees_true');
+        netcdf.putAtt(ncid, varid_bearing, 'sdn_parameter_name', 'Orientation (horizontal relative to true north) of measurement device {heading}');
+        netcdf.putAtt(ncid, varid_bearing, 'sdn_parameter_urn', 'SDN:P01::HEADCM01');
+        netcdf.putAtt(ncid, varid_bearing, 'sdn_uom_name', 'Degrees true');
+        netcdf.putAtt(ncid, varid_bearing, 'sdn_uom_urn', 'SDN:P06::UABB');
         netcdf.putAtt(ncid, varid_bearing, 'ancillary_variables', 'POSITION_SEADATANET_QC');
         
         % Range (arbitrary 'x' dimension)
@@ -642,6 +670,10 @@ if (R2C_err == 0)
         netcdf.putAtt(ncid, varid_range, 'axis', 'X');
         netcdf.putAtt(ncid, varid_range, 'long_name', 'Range Away From Instrument');
         netcdf.putAtt(ncid, varid_range, 'units', 'km');
+        netcdf.putAtt(ncid, varid_range, 'sdn_parameter_name', 'Range (from fixed reference point) by unspecified GPS system');
+        netcdf.putAtt(ncid, varid_range, 'sdn_parameter_urn', 'SDN:P01::RIFNAX01');
+        netcdf.putAtt(ncid, varid_range, 'sdn_uom_name', 'Kilometres');
+        netcdf.putAtt(ncid, varid_range, 'sdn_uom_urn', 'SDN:P06::ULKM');
         netcdf.putAtt(ncid, varid_range, 'ancillary_variables', 'POSITION_SEADATANET_QC');
         
         % Depth (arbitrary 'z' dimension)
@@ -652,6 +684,10 @@ if (R2C_err == 0)
         netcdf.putAtt(ncid, varid_depth, 'axis', 'Z');
         netcdf.putAtt(ncid, varid_depth, 'positive', 'down');
         netcdf.putAtt(ncid, varid_depth, 'reference', 'sea_level');
+        netcdf.putAtt(ncid, varid_depth, 'sdn_parameter_name', 'Depth below surface of the water body');
+        netcdf.putAtt(ncid, varid_depth, 'sdn_parameter_urn', 'SDN:P01::ADEPZZ01');
+        netcdf.putAtt(ncid, varid_depth, 'sdn_uom_name', 'Metres');
+        netcdf.putAtt(ncid, varid_depth, 'sdn_uom_urn', 'SDN:P06::ULAA');
         netcdf.putAtt(ncid, varid_depth, 'ancillary_variables', 'DEPTH_SEADATANET_QC');
         
         
@@ -675,6 +711,10 @@ if (R2C_err == 0)
         netcdf.putAtt( ncid, varid_lat, 'coordinates', 'HEAD RNGE' );
         netcdf.putAtt(ncid, varid_lat, 'FillValue', netcdf.getConstant('NC_FILL_FLOAT'));
         %     netcdf.putAtt(ncid, varid_lat, 'axis', 'Y');
+        netcdf.putAtt(ncid, varid_lat, 'sdn_parameter_name', 'Latitude north');
+        netcdf.putAtt(ncid, varid_lat, 'sdn_parameter_urn', 'SDN:P01::ALATZZ01');
+        netcdf.putAtt(ncid, varid_lat, 'sdn_uom_name', 'Degrees north');
+        netcdf.putAtt(ncid, varid_lat, 'sdn_uom_urn', 'SDN:P06::DEGN');
         netcdf.putAtt(ncid, varid_lat, 'ancillary_variables', 'POSITION_SEADATANET_QC');
         
         % Longitude
@@ -686,6 +726,10 @@ if (R2C_err == 0)
         netcdf.putAtt(ncid, varid_lon, 'valid_range', single( [-180 180]));
         netcdf.putAtt( ncid, varid_lon, 'coordinates', 'HEAD RNGE' );
         netcdf.putAtt(ncid, varid_lon, 'FillValue', netcdf.getConstant('NC_FILL_FLOAT'));
+        netcdf.putAtt(ncid, varid_lon, 'sdn_parameter_name', 'Longitude east');
+        netcdf.putAtt(ncid, varid_lon, 'sdn_parameter_urn', 'SDN:P01::ALONZZ01');
+        netcdf.putAtt(ncid, varid_lon, 'sdn_uom_name', 'Degrees east');
+        netcdf.putAtt(ncid, varid_lon, 'sdn_uom_urn', 'SDN:P06::DEGE');
         netcdf.putAtt(ncid, varid_lon, 'ancillary_variables', 'POSITION_SEADATANET_QC');
         
         % crs
@@ -698,6 +742,48 @@ if (R2C_err == 0)
         
         %%
         
+        %% Add SDN namespace variables
+        
+        % To enforce homogeneity in the codes and interoperability with SDC, the site_code has to be set equal 
+        % to the EDIOS Series id of the HFR network and platform_code must include the EDIOS Platform id of the 
+        % HFR site, i.e.:
+        %           SDN_CRUISE=site_code=EDIOS-Series-id
+        %           SDN_STATION=platform_code=EDIOS-Series-id_Total (for total current data files)
+        %           SDN_STATION=platform_code=EDIOS-Series-id_ EDIOS-Platform-id (for radial current data files)
+        
+        % SDN_CRUISE
+        varid_sdncruise = netcdf.defVar( ncid, 'SDN_CRUISE', 'char', [dimid_string_site_code dimid_t]);
+        netcdf.defVarDeflate(ncid, varid_sdncruise, true, true, 6);
+        netcdf.putAtt( ncid, varid_sdncruise, 'long_name', 'Grid grouping label');
+        
+        % SDN_STATION
+        varid_sdnstation = netcdf.defVar( ncid, 'SDN_STATION', 'char', [dimid_string_platform_code dimid_t]);
+        netcdf.defVarDeflate(ncid, varid_sdnstation, true, true, 6);
+        netcdf.putAtt( ncid, varid_sdnstation, 'long_name', 'Grid label');
+        
+        % SDN_LOCAL_CDI_ID
+        varid_sdnlocalcdiid = netcdf.defVar( ncid, 'SDN_LOCAL_CDI_ID', 'char', [dimid_string_sdn_local_cdi_id dimid_t]);
+        netcdf.defVarDeflate(ncid, varid_sdnlocalcdiid, true, true, 6);
+        netcdf.putAtt( ncid, varid_sdnlocalcdiid, 'long_name', 'SeaDataCloud CDI identifier');
+        netcdf.putAtt( ncid, varid_sdnlocalcdiid, 'cf_role', 'grid_id');
+        
+        % SDN_EDMO_CODE
+        varid_sdnedmocode = netcdf.defVar( ncid, 'SDN_EDMO_CODE', 'short', dimid_t);
+        netcdf.defVarDeflate(ncid, varid_sdnedmocode, true, true, 6);
+        netcdf.putAtt( ncid, varid_sdnedmocode, 'long_name', 'European Directory of Marine Organisations code for the CDI partner');
+        
+        % SDN_REFERENCES
+        varid_sdnreferences = netcdf.defVar( ncid, 'SDN_REFERENCES', 'char', [dimid_string_sdn_references dimid_t]);
+        netcdf.defVarDeflate(ncid, varid_sdnreferences, true, true, 6);
+        netcdf.putAtt( ncid, varid_sdnreferences, 'long_name', 'Usage metadata reference');
+        
+        % SDN_XLINK
+        varid_sdnxlink = netcdf.defVar(ncid, 'SDN_XLINK', 'char', [dimid_string_sdn_xlink dimid_refmax dimid_t]);
+        netcdf.defVarDeflate(ncid, varid_sdnxlink, true, true, 6);
+        netcdf.putAtt( ncid, varid_sdnxlink, 'long_name', 'External resource linkages');
+        
+        %%
+               
         %% Add data variables
         
         % radial_sea_water_velocity_away_from_instrument:
@@ -716,6 +802,10 @@ if (R2C_err == 0)
         netcdf.putAtt(ncid, varid_speed, 'FillValue', netcdf.getConstant('NC_FILL_FLOAT'));
         netcdf.putAtt(ncid, varid_speed, 'scale_factor', single(1));
         netcdf.putAtt(ncid, varid_speed, 'add_offset', single(0));
+        netcdf.putAtt(ncid, varid_speed, 'sdn_parameter_name', 'Current speed (Eulerian) in the water body by directional range-gated radar');
+        netcdf.putAtt(ncid, varid_speed, 'sdn_parameter_urn', 'SDN:P01::LCSAWVRD');
+        netcdf.putAtt(ncid, varid_speed, 'sdn_uom_name', 'Metres per second');
+        netcdf.putAtt(ncid, varid_speed, 'sdn_uom_urn', 'SDN:P06::UVAA');
         netcdf.putAtt( ncid, varid_speed, 'coordinates', 'TIME DEPH HEAD RNGE' );
         netcdf.putAtt(ncid, varid_speed, 'ancillary_variables', 'QCflag, OWTR_QC, MDFL_QC, CSPD_QC, RDCT_QC');
         
@@ -734,8 +824,12 @@ if (R2C_err == 0)
         netcdf.putAtt(ncid, varid_direction, 'FillValue', netcdf.getConstant('NC_FILL_SHORT'));
         netcdf.putAtt(ncid, varid_direction, 'add_offset', single(0));
         netcdf.putAtt(ncid, varid_direction, 'units', 'degrees_true');
-        netcdf.putAtt( ncid, varid_direction, 'coordinates', 'TIME DEPH HEAD RNGE' );
         netcdf.putAtt(ncid, varid_direction, 'scale_factor', single(0.1));
+        netcdf.putAtt(ncid, varid_direction, 'sdn_parameter_name', 'Current direction (Eulerian) in the water body by directional range-gated radar');
+        netcdf.putAtt(ncid, varid_direction, 'sdn_parameter_urn', 'SDN:P01::LCDAWVRD');
+        netcdf.putAtt(ncid, varid_direction, 'sdn_uom_name', 'Degrees True');
+        netcdf.putAtt(ncid, varid_direction, 'sdn_uom_urn', 'SDN:P06::UABB');
+        netcdf.putAtt( ncid, varid_direction, 'coordinates', 'TIME DEPH HEAD RNGE' );        
         netcdf.putAtt(ncid, varid_direction, 'ancillary_variables', 'QCflag, OWTR_QC, MDFL_QC, AVRB_QC, RDCT_QC');
         
         % u
@@ -748,6 +842,10 @@ if (R2C_err == 0)
         netcdf.putAtt(ncid, varid_u, 'scale_factor', single(1));
         netcdf.putAtt(ncid, varid_u, 'add_offset', single(0));
         netcdf.putAtt(ncid, varid_u, 'units', 'm s-1');
+        netcdf.putAtt(ncid, varid_u, 'sdn_parameter_name', 'Eastward current velocity in the water body');
+        netcdf.putAtt(ncid, varid_u, 'sdn_parameter_urn', 'SDN:P01::LCEWZZ01');
+        netcdf.putAtt(ncid, varid_u, 'sdn_uom_name', 'Metres per second');
+        netcdf.putAtt(ncid, varid_u, 'sdn_uom_urn', 'SDN:P06::UVAA');
         netcdf.putAtt(ncid, varid_u, 'coordinates', 'TIME DEPH HEAD RNGE' );
         netcdf.putAtt(ncid, varid_u, 'ancillary_variables', 'QCflag, OWTR_QC, MDFL_QC, CSPD_QC, VART_QC, AVRB_QC, RDCT_QC');
         
@@ -761,6 +859,10 @@ if (R2C_err == 0)
         netcdf.putAtt(ncid, varid_v, 'scale_factor', single(1));
         netcdf.putAtt(ncid, varid_v, 'add_offset', single(0));
         netcdf.putAtt(ncid, varid_v, 'units', 'm s-1');
+        netcdf.putAtt(ncid, varid_v, 'sdn_parameter_name', 'Northward current velocity in the water body');
+        netcdf.putAtt(ncid, varid_v, 'sdn_parameter_urn', 'SDN:P01::LCNSZZ01');
+        netcdf.putAtt(ncid, varid_v, 'sdn_uom_name', 'Metres per second');
+        netcdf.putAtt(ncid, varid_v, 'sdn_uom_urn', 'SDN:P06::UVAA');
         netcdf.putAtt(ncid, varid_v, 'coordinates', 'TIME DEPH HEAD RNGE' );
         netcdf.putAtt(ncid, varid_v, 'ancillary_variables', 'QCflag, OWTR_QC, MDFL_QC, CSPD_QC, VART_QC, AVRB_QC, RDCT_QC');
         
@@ -774,6 +876,10 @@ if (R2C_err == 0)
         netcdf.putAtt(ncid, varid_espc, 'FillValue', netcdf.getConstant('NC_FILL_FLOAT'));
         netcdf.putAtt(ncid, varid_espc, 'scale_factor', single(1));
         netcdf.putAtt(ncid, varid_espc, 'add_offset', single(0));
+        netcdf.putAtt(ncid, varid_espc, 'sdn_parameter_name', '');
+        netcdf.putAtt(ncid, varid_espc, 'sdn_parameter_urn', '');
+        netcdf.putAtt(ncid, varid_espc, 'sdn_uom_name', 'Metres per second');
+        netcdf.putAtt(ncid, varid_espc, 'sdn_uom_urn', 'SDN:P06::UVAA');
         netcdf.putAtt(ncid, varid_espc, 'ancillary_variables', 'QCflag, VART_QC');
         
         % Temporal Quality
@@ -786,6 +892,10 @@ if (R2C_err == 0)
         netcdf.putAtt(ncid, varid_etmp, 'FillValue', netcdf.getConstant('NC_FILL_FLOAT'));
         netcdf.putAtt(ncid, varid_etmp, 'scale_factor', single(1));
         netcdf.putAtt(ncid, varid_etmp, 'add_offset', single(0));
+        netcdf.putAtt(ncid, varid_etmp, 'sdn_parameter_name', '');
+        netcdf.putAtt(ncid, varid_etmp, 'sdn_parameter_urn', '');
+        netcdf.putAtt(ncid, varid_etmp, 'sdn_uom_name', 'Metres per second');
+        netcdf.putAtt(ncid, varid_etmp, 'sdn_uom_urn', 'SDN:P06::UVAA');
         netcdf.putAtt(ncid, varid_etmp, 'ancillary_variables', 'QCflag, VART_QC');
         
         % Velocity Maximum
@@ -797,6 +907,10 @@ if (R2C_err == 0)
         netcdf.putAtt(ncid, varid_maxv, 'scale_factor', single(1));
         netcdf.putAtt(ncid, varid_maxv, 'add_offset', single(0));
         netcdf.putAtt(ncid, varid_maxv, 'units', 'm s-1' );
+        netcdf.putAtt(ncid, varid_maxv, 'sdn_parameter_name', 'Current speed (Eulerian) in the water body by directional range-gated radar');
+        netcdf.putAtt(ncid, varid_maxv, 'sdn_parameter_urn', 'SDN:P01::LCSAWVRD');
+        netcdf.putAtt(ncid, varid_maxv, 'sdn_uom_name', 'Metres per second');
+        netcdf.putAtt(ncid, varid_maxv, 'sdn_uom_urn', 'SDN:P06::UVAA');
         netcdf.putAtt(ncid, varid_maxv, 'coordinates', 'TIME DEPH HEAD RNGE' );
         netcdf.putAtt(ncid, varid_maxv, 'ancillary_variables', 'QCflag, MDFL_QC, CSPD_QC, VART_QC');
         
@@ -809,6 +923,10 @@ if (R2C_err == 0)
         netcdf.putAtt(ncid, varid_minv, 'scale_factor', single(1));
         netcdf.putAtt(ncid, varid_minv, 'add_offset', single(0));
         netcdf.putAtt(ncid, varid_minv, 'units', 'm s-1');
+        netcdf.putAtt(ncid, varid_minv, 'sdn_parameter_name', 'Current speed (Eulerian) in the water body by directional range-gated radar');
+        netcdf.putAtt(ncid, varid_minv, 'sdn_parameter_urn', 'SDN:P01::LCSAWVRD');
+        netcdf.putAtt(ncid, varid_minv, 'sdn_uom_name', 'Metres per second');
+        netcdf.putAtt(ncid, varid_minv, 'sdn_uom_urn', 'SDN:P06::UVAA');
         netcdf.putAtt(ncid, varid_minv, 'coordinates', 'TIME DEPH HEAD RNGE' );
         netcdf.putAtt(ncid, varid_minv, 'ancillary_variables', 'QCflag, MDFL_QC, CSPD_QC, VART_QC');
         
@@ -821,6 +939,10 @@ if (R2C_err == 0)
         netcdf.putAtt(ncid, varid_ersc, 'scale_factor', single(1));
         netcdf.putAtt(ncid, varid_ersc, 'add_offset', single(0));
         netcdf.putAtt(ncid, varid_ersc, 'units', '1');
+        netcdf.putAtt(ncid, varid_ersc, 'sdn_parameter_name', '');
+        netcdf.putAtt(ncid, varid_ersc, 'sdn_parameter_urn', '');
+        netcdf.putAtt(ncid, varid_ersc, 'sdn_uom_name', 'Dimensionless');
+        netcdf.putAtt(ncid, varid_ersc, 'sdn_uom_urn', 'SDN:P06::UUUU');
         netcdf.putAtt(ncid, varid_ersc, 'coordinates', 'TIME DEPH HEAD RNGE' );
         netcdf.putAtt(ncid, varid_ersc, 'ancillary_variables', 'QCflag');
         
@@ -833,6 +955,10 @@ if (R2C_err == 0)
         netcdf.putAtt(ncid, varid_ertc, 'scale_factor', single(1));
         netcdf.putAtt(ncid, varid_ertc, 'add_offset', single(0));
         netcdf.putAtt(ncid, varid_ertc, 'units', '1');
+        netcdf.putAtt(ncid, varid_ertc, 'sdn_parameter_name', '');
+        netcdf.putAtt(ncid, varid_ertc, 'sdn_parameter_urn', '');
+        netcdf.putAtt(ncid, varid_ertc, 'sdn_uom_name', 'Dimensionless');
+        netcdf.putAtt(ncid, varid_ertc, 'sdn_uom_urn', 'SDN:P06::UUUU');
         netcdf.putAtt(ncid, varid_ertc, 'coordinates', 'TIME DEPH HEAD RNGE' );
         netcdf.putAtt(ncid, varid_ertc, 'ancillary_variables', 'QCflag');
         
@@ -845,6 +971,10 @@ if (R2C_err == 0)
         netcdf.putAtt(ncid, varid_xdst, 'scale_factor', single(1));
         netcdf.putAtt(ncid, varid_xdst, 'add_offset', single(0));
         netcdf.putAtt(ncid, varid_xdst, 'units', 'km');
+        netcdf.putAtt(ncid, varid_xdst, 'sdn_parameter_name', '');
+        netcdf.putAtt(ncid, varid_xdst, 'sdn_parameter_urn', '');
+        netcdf.putAtt(ncid, varid_xdst, 'sdn_uom_name', 'Kilometres');
+        netcdf.putAtt(ncid, varid_xdst, 'sdn_uom_urn', 'SDN:P06::ULKM');
         netcdf.putAtt(ncid, varid_xdst, 'coordinates', 'HEAD RNGE' );
         netcdf.putAtt(ncid, varid_xdst, 'ancillary_variables', 'QCflag, OWTR_QC, MDFL_QC, CSPD_QC, VART_QC');
         
@@ -857,6 +987,10 @@ if (R2C_err == 0)
         netcdf.putAtt(ncid, varid_ydst, 'scale_factor', single(1));
         netcdf.putAtt(ncid, varid_ydst, 'add_offset', single(0));
         netcdf.putAtt(ncid, varid_ydst, 'units', 'km');
+        netcdf.putAtt(ncid, varid_ydst, 'sdn_parameter_name', '');
+        netcdf.putAtt(ncid, varid_ydst, 'sdn_parameter_urn', '');
+        netcdf.putAtt(ncid, varid_ydst, 'sdn_uom_name', 'Kilometres');
+        netcdf.putAtt(ncid, varid_ydst, 'sdn_uom_urn', 'SDN:P06::ULKM');
         netcdf.putAtt(ncid, varid_ydst, 'coordinates', 'HEAD RNGE' );
         netcdf.putAtt(ncid, varid_ydst, 'ancillary_variables', 'QCflag, OWTR_QC, MDFL_QC, CSPD_QC, VART_QC');
         
@@ -869,6 +1003,10 @@ if (R2C_err == 0)
         netcdf.putAtt(ncid, varid_sprc, 'scale_factor', single(1));
         netcdf.putAtt(ncid, varid_sprc, 'add_offset', single(0));
         netcdf.putAtt(ncid, varid_sprc, 'units', '1');
+        netcdf.putAtt(ncid, varid_sprc, 'sdn_parameter_name', '');
+        netcdf.putAtt(ncid, varid_sprc, 'sdn_parameter_urn', '');
+        netcdf.putAtt(ncid, varid_sprc, 'sdn_uom_name', 'Dimensionless');
+        netcdf.putAtt(ncid, varid_sprc, 'sdn_uom_urn', 'SDN:P06::UUUU');
         netcdf.putAtt(ncid, varid_sprc, 'coordinates', 'TIME DEPH HEAD RNGE' );
         netcdf.putAtt(ncid, varid_sprc, 'ancillary_variables', 'QCflag, OWTR_QC, MDFL_QC, CSPD_QC, VART_QC');
         
@@ -881,6 +1019,10 @@ if (R2C_err == 0)
         netcdf.putAtt(ncid, varid_narx, 'scale_factor', int16(1));
         netcdf.putAtt(ncid, varid_narx, 'add_offset', int16(0));
         netcdf.putAtt(ncid, varid_narx, 'units', char('1'));
+        netcdf.putAtt(ncid, varid_narx, 'sdn_parameter_name', '');
+        netcdf.putAtt(ncid, varid_narx, 'sdn_parameter_urn', '');
+        netcdf.putAtt(ncid, varid_narx, 'sdn_uom_name', 'Dimensionless');
+        netcdf.putAtt(ncid, varid_narx, 'sdn_uom_urn', 'SDN:P06::UUUU');
         %         netcdf.putAtt(ncid, varid_sprc, 'coordinates', 'TIME' );
         
         % Number of transmit antennas
@@ -892,6 +1034,10 @@ if (R2C_err == 0)
         netcdf.putAtt(ncid, varid_natx, 'scale_factor', int16(1));
         netcdf.putAtt(ncid, varid_natx, 'add_offset', int16(0));
         netcdf.putAtt(ncid, varid_natx, 'units', char('1'));
+        netcdf.putAtt(ncid, varid_natx, 'sdn_parameter_name', '');
+        netcdf.putAtt(ncid, varid_natx, 'sdn_parameter_urn', '');
+        netcdf.putAtt(ncid, varid_natx, 'sdn_uom_name', 'Dimensionless');
+        netcdf.putAtt(ncid, varid_natx, 'sdn_uom_urn', 'SDN:P06::UUUU');
         %         netcdf.putAtt(ncid, varid_natx, 'coordinates', 'TIME' );
         
         % Receive antenna latitudes
@@ -904,6 +1050,10 @@ if (R2C_err == 0)
         netcdf.putAtt(ncid, varid_sltr, 'scale_factor', single(1));
         netcdf.putAtt(ncid, varid_sltr, 'add_offset', single(0));
         netcdf.putAtt(ncid, varid_sltr, 'units', 'degrees_north');
+        netcdf.putAtt(ncid, varid_sltr, 'sdn_parameter_name', 'Latitude north');
+        netcdf.putAtt(ncid, varid_sltr, 'sdn_parameter_urn', 'SDN:P01::ALATZZ01');
+        netcdf.putAtt(ncid, varid_sltr, 'sdn_uom_name', 'Degrees north');
+        netcdf.putAtt(ncid, varid_sltr, 'sdn_uom_urn', 'SDN:P06::DEGN');
         netcdf.putAtt(ncid, varid_sltr, 'coordinates', 'TIME MAXSITE' );
         
         % Receive antenna longitudes
@@ -916,6 +1066,10 @@ if (R2C_err == 0)
         netcdf.putAtt(ncid, varid_slnr, 'scale_factor', single(1));
         netcdf.putAtt(ncid, varid_slnr, 'add_offset', single(0));
         netcdf.putAtt(ncid, varid_slnr, 'units', 'degrees_east');
+        netcdf.putAtt(ncid, varid_slnr, 'sdn_parameter_name', 'Longitude east');
+        netcdf.putAtt(ncid, varid_slnr, 'sdn_parameter_urn', 'SDN:P01::ALONZZ01');
+        netcdf.putAtt(ncid, varid_slnr, 'sdn_uom_name', 'Degrees east');
+        netcdf.putAtt(ncid, varid_slnr, 'sdn_uom_urn', 'SDN:P06::DEGE');
         netcdf.putAtt(ncid, varid_slnr, 'coordinates', 'TIME MAXSITE' );
         
         % Transmit antenna latitudes
@@ -928,6 +1082,10 @@ if (R2C_err == 0)
         netcdf.putAtt(ncid, varid_sltt, 'scale_factor', single(1));
         netcdf.putAtt(ncid, varid_sltt, 'add_offset', single(0));
         netcdf.putAtt(ncid, varid_sltt, 'units', 'degrees_north');
+        netcdf.putAtt(ncid, varid_sltt, 'sdn_parameter_name', 'Latitude north');
+        netcdf.putAtt(ncid, varid_sltt, 'sdn_parameter_urn', 'SDN:P01::ALATZZ01');
+        netcdf.putAtt(ncid, varid_sltt, 'sdn_uom_name', 'Degrees north');
+        netcdf.putAtt(ncid, varid_sltt, 'sdn_uom_urn', 'SDN:P06::DEGN');
         netcdf.putAtt(ncid, varid_sltt, 'coordinates', 'TIME MAXSITE' );
         
         % Transmit antenna longitudes
@@ -940,17 +1098,29 @@ if (R2C_err == 0)
         netcdf.putAtt(ncid, varid_slnt, 'scale_factor', single(1));
         netcdf.putAtt(ncid, varid_slnt, 'add_offset', single(0));
         netcdf.putAtt(ncid, varid_slnt, 'units', 'degrees_east');
+        netcdf.putAtt(ncid, varid_slnt, 'sdn_parameter_name', 'Longitude east');
+        netcdf.putAtt(ncid, varid_slnt, 'sdn_parameter_urn', 'SDN:P01::ALONZZ01');
+        netcdf.putAtt(ncid, varid_slnt, 'sdn_uom_name', 'Degrees east');
+        netcdf.putAtt(ncid, varid_slnt, 'sdn_uom_urn', 'SDN:P06::DEGE');
         netcdf.putAtt(ncid, varid_slnt, 'coordinates', 'TIME MAXSITE' );
         
         % Receive antenna codes
         varid_scdr = netcdf.defVar(ncid, 'SCDR', 'char', [dimid_string4 dimid_maxsite dimid_t]);
         netcdf.defVarDeflate(ncid, varid_scdr, true, true, 6);
         netcdf.putAtt(ncid, varid_scdr, 'long_name', 'Receive Antenna Codes');
+        netcdf.putAtt(ncid, varid_scdr, 'sdn_parameter_name', '');
+        netcdf.putAtt(ncid, varid_scdr, 'sdn_parameter_urn', '');
+        netcdf.putAtt(ncid, varid_scdr, 'sdn_uom_name', 'Dimensionless');
+        netcdf.putAtt(ncid, varid_scdr, 'sdn_uom_urn', 'SDN:P06::UUUU');
         
         % Transmit antenna codes
         varid_scdt = netcdf.defVar(ncid, 'SCDT', 'char', [dimid_string4 dimid_maxsite dimid_t]);
         netcdf.defVarDeflate(ncid, varid_scdt, true, true, 6);
         netcdf.putAtt(ncid, varid_scdt, 'long_name', 'Transmit Antenna Codes');
+        netcdf.putAtt(ncid, varid_scdt, 'sdn_parameter_name', '');
+        netcdf.putAtt(ncid, varid_scdt, 'sdn_parameter_urn', '');
+        netcdf.putAtt(ncid, varid_scdt, 'sdn_uom_name', 'Dimensionless');
+        netcdf.putAtt(ncid, varid_scdt, 'sdn_uom_urn', 'SDN:P06::UUUU');
         
         %%
         
@@ -1100,8 +1270,8 @@ if (R2C_err == 0)
         % MANDATORY ATTRIBUTES
         
         % Discovery and Identification
-        netcdf.putAtt(ncid, varid_global, 'site_code', 'HFR_TirLig');
-        netcdf.putAtt(ncid, varid_global, 'platform_code', ['HFR_TirLig_' Site]);
+        netcdf.putAtt(ncid, varid_global, 'site_code', site_code);
+        netcdf.putAtt(ncid, varid_global, 'platform_code', platform_code);
         netcdf.putAtt(ncid, varid_global, 'data_mode', 'R');
         netcdf.putAtt(ncid, varid_global, 'DoA_estimation_method', 'Direction Finding');
         netcdf.putAtt(ncid, varid_global, 'calibration_type', 'APM');
@@ -1117,9 +1287,9 @@ if (R2C_err == 0)
         netcdf.putAtt(ncid, varid_global, 'source', 'coastal structure');
         netcdf.putAtt(ncid, varid_global, 'source_platform_category_code', '17');
         netcdf.putAtt(ncid, varid_global, 'institution', 'CNR-ISMAR: National Research Council - Institute of Marine Sciences, S.S. Lerici');
-        netcdf.putAtt(ncid, varid_global, 'institution_edmo_code', '134');
+        netcdf.putAtt(ncid, varid_global, 'institution_edmo_code', num2str(EDMO_code));
         netcdf.putAtt(ncid, varid_global, 'data_assembly_center', 'European HFR Node');
-        netcdf.putAtt(ncid, varid_global, 'id', ['HFR_TirLig_' Site '_' strrep(fileTime(1:10), '_', '-') '_' fileTime(12:13) 'Z']);
+        netcdf.putAtt(ncid, varid_global, 'id', id);
         % Geo-spatial-temporal
         netcdf.putAtt(ncid, varid_global, 'data_type', 'HF radar radial data');
         netcdf.putAtt(ncid, varid_global, 'feature_type', 'surface');
@@ -1466,6 +1636,13 @@ if (R2C_err == 0)
         netcdf.putVar(ncid, varid_depth, 0);
         netcdf.putVar(ncid, varid_lat, latd);
         netcdf.putVar(ncid, varid_lon, lond);
+        netcdf.putVar(ncid, varid_crs, 0);
+        netcdf.putVar(ncid, varid_sdncruise, site_code);
+        netcdf.putVar(ncid, varid_sdnstation, platform_code); 
+        netcdf.putVar(ncid, varid_sdnedmocode, EDMO_code);
+        netcdf.putVar(ncid, varid_sdnlocalcdiid, id);
+        netcdf.putVar(ncid, varid_sdnreferences, TDS_catalog);
+        netcdf.putVar(ncid, varid_sdnxlink, xlink');        
         netcdf.putVar(ncid, varid_speed, radialVelocityMedianFiltered);
         netcdf.putVar(ncid, varid_direction, head);
         netcdf.putVar(ncid, varid_u, velu);
