@@ -197,7 +197,7 @@ if (T2C_err == 0)
         time_str = sprintf('%.4d_%.2d_%.2d_%.2d%.2d',ts(1,1),ts(1,2),ts(1,3),ts(1,4),ts(1,5));
         ncfile = [dest_nc_tot 'TOTL_' time_str '.nc'];
         servRD_ncfile = [servRD_nc_tot 'TOTL_' time_str '.nc'];
-        citation_str = ['Data collected and processed by CNR-ISMAR within RITMARE and Jerico-Next projects -  Year ' num2str(ts(1,1))];
+        citation_str = ['Data collected and processed by CNR-ISMAR within RITMARE, Jerico-Next and IMPACT projects -  Year ' num2str(ts(1,1))];
     catch err
         display(['[' datestr(now) '] - - ERROR in ' mfilename ' -> ' err.message]);
         T2C_err = 1;
@@ -648,7 +648,7 @@ if (T2C_err == 0)
         ncwriteatt(ncfile,'/','publisher_url',char('http://radarhf.ismar.cnr.it'));
         ncwriteatt(ncfile,'/','publisher_email',char('lorenzo.corgnati@sp.ismar.cnr.it'));
         ncwriteatt(ncfile,'/','license',char('HF radar sea surface current velocity dataset by CNR-ISMAR is licensed under a Creative Commons Attribution 4.0 International License. You should have received a copy of the license along with this work. If not, see http://creativecommons.org/licenses/by/4.0/.'));
-        ncwriteatt(ncfile,'/','acknowledgment',char('ISMAR HF Radar Network has been established within RITMARE and Jerico-Next projects. The network has been designed, implemented and managed through the efforts of ISMAR S.S. Lerici.'));
+        ncwriteatt(ncfile,'/','acknowledgment',char('ISMAR HF Radar Network has been established within RITMARE, Jerico-Next and IMPACT projects. The network has been designed, implemented and managed through the efforts of ISMAR S.S. Lerici.'));
         % Provenance
         ncwriteatt(ncfile,'/','date_created',char(dateCreated));      
         ncwriteatt(ncfile,'/','history',char([time_coll ' data collected. ' dateCreated ' netCDF file created and sent to TAC']));
@@ -662,7 +662,7 @@ if (T2C_err == 0)
         % Discovery and Identification        
         ncwriteatt(ncfile,'/','naming_authority',char('it.cnr.ismar'));
         ncwriteatt(ncfile,'/','id',char(dataID));
-        ncwriteatt(ncfile,'/','project',char('RITMARE and Jerico-Next'));
+        ncwriteatt(ncfile,'/','project',char('RITMARE, Jerico-Next and IMPACT'));
         ncwriteatt(ncfile,'/','keywords',char('OCEAN CURRENTS, SURFACE WATER, RADAR, SCR-HF'));
         ncwriteatt(ncfile,'/','keywords_vocabulary',char('GCMD Science Keywords'));
         ncwriteatt(ncfile,'/','comment',char('Total velocities are derived using least square fit that maps radial velocities measured from individual sites onto a cartesian grid. The final product is a map of the horizontal components of the ocean currents on a regular grid in the area of overlap of two or more radar stations.'));

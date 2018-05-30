@@ -180,7 +180,7 @@ if (T2C_err == 0)
         ncfile = [dest_nc_tot 'TOTL_' time_str '.nc'];
         servTH_ncfile = [servTH_nc_tot 'TOTL_' time_str '.nc'];
         servRD_ncfile = [servRD_nc_tot 'TOTL_' time_str '.nc'];
-        citation_str = ['Data collected and processed by CNR-ISMAR within RITMARE and Jerico-Next projects -  Year ' num2str(ts(1,1))];
+        citation_str = ['Data collected and processed by CNR-ISMAR within RITMARE, Jerico-Next and IMPACT projects -  Year ' num2str(ts(1,1))];
     catch err
         T2C_err = 1;
     end
@@ -448,7 +448,7 @@ if (T2C_err == 0)
         ncwriteatt(ncfile,'/','id',char(dataID));
         ncwriteatt(ncfile,'/','naming_authority',char('it.cnr.ismar'));
         ncwriteatt(ncfile,'/','cdm_data_type',char('Grid'));
-        ncwriteatt(ncfile,'/','project',char('RITMARE and Jerico-Next'));
+        ncwriteatt(ncfile,'/','project',char('RITMARE, Jerico-Next and IMPACT'));
         ncwriteatt(ncfile, '/','time_coverage_start',char(timeCoverageStart));
         ncwriteatt(ncfile, '/','time_coverage_end',char(timeCoverageEnd));
         ncwriteatt(ncfile, '/','time_coverage_duration',char('PT1H'));
@@ -463,7 +463,7 @@ if (T2C_err == 0)
         ncwriteatt(ncfile,'/','creator_name',char('Lorenzo Corgnati'));
         ncwriteatt(ncfile,'/','creator_url',char('http://radarhf.ismar.cnr.it'));
         ncwriteatt(ncfile,'/','creator_email',char('lorenzo.corgnati@sp.ismar.cnr.it'));
-        ncwriteatt(ncfile,'/','acknowledgment',char('ISMAR HF Radar Network has been established within RITMARE and Jerico-Next projects. The network has been designed, implemented and managed through the efforts of ISMAR UOS La Spezia.'));
+        ncwriteatt(ncfile,'/','acknowledgment',char('ISMAR HF Radar Network has been established within RITMARE, Jerico-Next and IMPACT projects. The network has been designed, implemented and managed through the efforts of ISMAR UOS La Spezia.'));
         ncwriteatt(ncfile,'/','comment',char('Total velocities are derived using least square fit that maps radial velocities measured from individual sites onto a cartesian grid. The final product is a map of the horizontal components of the ocean currents on a regular grid in the area of overlap of two or more radar stations.'));
         ncwriteatt(ncfile,'/','netcdf_library_version',char(netcdf.inqLibVers));
         ncwriteatt(ncfile,'/','netcdf_format',char(ncfmt));

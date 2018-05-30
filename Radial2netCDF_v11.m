@@ -47,7 +47,7 @@ ncfile_tds = [dest_nc_tds 'RDL_' fileType '_' siteCode '_' fileTime '.nc'];
 ncfile_rd = [dest_nc_rd 'RDL_' fileType '_' siteCode '_' fileTime '.nc'];
 
 % Citation string
-citation_str = ['Data collected and processed by CNR-ISMAR within RITMARE and Jerico-Next projects -  Year ' fileTime(1:4)];
+citation_str = ['Data collected and processed by CNR-ISMAR within RITMARE, Jerico-Next and IMPACT projects -  Year ' fileTime(1:4)];
 
 
 %%
@@ -105,9 +105,16 @@ if (R2C_err == 0)
             AngularResolution = str2num(splitLine{2});
         end
         if(strcmp(splitLine{1}, '%Origin:'))
-            Origin = [str2num(splitLine{3}), str2num(splitLine{7})]; % for Jerico-Next
-%            Origin = [str2num(splitLine{3}), str2num(splitLine{6})]; % for SSD
-        end
+                JN = 1;
+                try
+                    Origin = [str2num(splitLine{3}), str2num(splitLine{7})]; % for Jerico-Next
+                catch err
+                    JN = 0;
+                end
+                if(JN == 0)
+                    Origin = [str2num(splitLine{3}), str2num(splitLine{6})]; % for SSD
+                end
+            end
         if(strcmp(splitLine{1}, '%CTF:'))
             CTF = strrep(header{head_idx}(length('%CTF:')+2:length(header{head_idx})), '"', '');
         end
@@ -572,7 +579,7 @@ if (R2C_err == 0)
     netcdf.putAtt(ncid, varid_global, 'cdm_data_type', 'Grid');
     
     % (X) project
-    netcdf.putAtt(ncid, varid_global, 'project', 'RITMARE and Jerico-Next');
+    netcdf.putAtt(ncid, varid_global, 'project', 'RITMARE, Jerico-Next and IMPACT');
     
     % (ACDD) time coverage period
     netcdf.putAtt(ncid, varid_global, 'time_coverage_start', timeCoverageStart);
@@ -606,7 +613,7 @@ if (R2C_err == 0)
     netcdf.putAtt(ncid, varid_global, 'creator_url', 'http://www.ismar.cnr.it/');
     
     % (X) acknowledgement
-    netcdf.putAtt(ncid, varid_global, 'acknowledgment', 'ISMAR HF Radar Network has been established within RITMARE and Jerico-Next projects. The network has been designed, implemented and managed through the efforts of ISMAR UOS La Spezia.');
+    netcdf.putAtt(ncid, varid_global, 'acknowledgment', 'ISMAR HF Radar Network has been established within RITMARE, Jerico-Next and IMPACT projects. The network has been designed, implemented and managed through the efforts of ISMAR UOS La Spezia.');
     
     % (ACDD) comment
     nc_comment = sprintf('%s %s %s', ...
