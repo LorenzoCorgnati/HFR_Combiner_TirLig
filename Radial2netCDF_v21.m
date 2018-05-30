@@ -59,7 +59,7 @@ ncfile_local = [dest_nc_local 'RDL_' fileType '_' siteCode '_' fileTime '.nc'];
 ncfile_rd = [dest_nc_rd 'RDL_' fileType '_' siteCode '_' fileTime '.nc'];
 
 % Citation and distribution string
-citation_str = ['These data were collected and made freely available by the Copernicus project and the programs that contribute to it. Data collected and processed by CNR-ISMAR within RITMARE and Jerico-Next projects -  Year ' fileTime(1:4)];
+citation_str = ['These data were collected and made freely available by the Copernicus project and the programs that contribute to it. Data collected and processed by CNR-ISMAR within RITMARE, Jerico-Next and IMPACT projects -  Year ' fileTime(1:4)];
 distribution_str = 'These data follow Copernicus standards; they are public and free of charge. User assumes all risk for use of data. User must display citation in any publication or product using data. User must contact PI prior to any commercial use of data.';
 
 %%
@@ -132,8 +132,15 @@ if (R2C_err == 0)
                 AngularResolution = str2num(splitLine{2});
             end
             if(strcmp(splitLine{1}, '%Origin:'))
-                Origin = [str2num(splitLine{3}), str2num(splitLine{7})]; % for Jerico-Next
-                %            Origin = [str2num(splitLine{3}), str2num(splitLine{6})]; % for SSD
+                JN = 1;
+                try
+                    Origin = [str2num(splitLine{3}), str2num(splitLine{7})]; % for Jerico-Next
+                catch err
+                    JN = 0;
+                end
+                if(JN == 0)
+                    Origin = [str2num(splitLine{3}), str2num(splitLine{6})]; % for SSD
+                end
             end
             if(strcmp(splitLine{1}, '%CTF:'))
                 CTF = strrep(header{head_idx}(length('%CTF:')+2:length(header{head_idx})), '"', '');
@@ -1312,7 +1319,7 @@ if (R2C_err == 0)
         netcdf.putAtt(ncid, varid_global, 'publisher_url', 'http://radarhf.ismar.cnr.it');
         netcdf.putAtt(ncid, varid_global, 'publisher_email', 'lorenzo.corgnati@sp.ismar.cnr.it');
         netcdf.putAtt(ncid, varid_global, 'license', 'HF radar sea surface current velocity dataset by CNR-ISMAR is licensed under a Creative Commons Attribution 4.0 International License. You should have received a copy of the license along with this work. If not, see http://creativecommons.org/licenses/by/4.0/.');
-        netcdf.putAtt(ncid, varid_global, 'acknowledgment', 'ISMAR HF Radar Network has been established within RITMARE and Jerico-Next projects. The network has been designed, implemented and managed through the efforts of ISMAR S.S. Lerici.');
+        netcdf.putAtt(ncid, varid_global, 'acknowledgment', 'ISMAR HF Radar Network has been established within RITMARE, Jerico-Next and IMPACT projects. The network has been designed, implemented and managed through the efforts of ISMAR S.S. Lerici.');
         % Provenance
         netcdf.putAtt(ncid, varid_global, 'date_created', dateCreated);
         netcdf.putAtt(ncid, varid_global, 'history', hist_create);
@@ -1326,7 +1333,7 @@ if (R2C_err == 0)
         % RECOMMENDED ATTRIBUTES
         
         % Discovery and Identification
-        netcdf.putAtt(ncid, varid_global, 'project', 'RITMARE and Jerico-Next');
+        netcdf.putAtt(ncid, varid_global, 'project', 'RITMARE, Jerico-Next and IMPACT');
         netcdf.putAtt(ncid, varid_global, 'naming_authority', 'it.cnr.ismar');
         netcdf.putAtt(ncid, varid_global, 'keywords', 'OCEAN CURRENTS, SURFACE WATER, RADAR, SCR-HF');
         netcdf.putAtt(ncid, varid_global, 'keywords_vocabulary', 'GCMD Science Keywords');
